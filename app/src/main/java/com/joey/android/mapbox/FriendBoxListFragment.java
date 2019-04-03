@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +36,8 @@ public class FriendBoxListFragment extends Fragment {
         mFriendBoxRecyclerView = view.findViewById(R.id.friend_box_recycler_view);
         mFriendBoxRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
+        setupAdapter();
+
         return view;
     }
 
@@ -47,12 +50,19 @@ public class FriendBoxListFragment extends Fragment {
     private class FriendBoxHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
 
+        private FriendBox mFriendBox;
+
+        private TextView mFriendNameTextView;
+
         public FriendBoxHolder(View friendBoxView) {
             super(friendBoxView);
+
+            mFriendNameTextView = friendBoxView.findViewById(R.id.friend_name);
         }
 
-        public void bind() {
-
+        public void bind(FriendBox friendBox) {
+            mFriendBox = friendBox;
+            mFriendNameTextView.setText(friendBox.getName());
         }
 
         @Override
@@ -84,7 +94,8 @@ public class FriendBoxListFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull FriendBoxHolder friendBoxHolder, int i) {
-
+            FriendBox friendBox = mFriendBoxes.get(i);
+            friendBoxHolder.bind(friendBox);
         }
 
         @Override

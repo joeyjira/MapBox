@@ -11,4 +11,8 @@ public class FriendBox {
         mFirstName = firstName;
         mLastName = lastName;
     }
+
+    public String getName() {
+        return mFirstName + " " + mLastName;
+    }
 }

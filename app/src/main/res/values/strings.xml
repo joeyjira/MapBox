@@ -3,4 +3,8 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+
+    // FriendBox String
+    <string name="get_location">Location</string>
+    <string name="leave_note">Note</string>
 </resources>
