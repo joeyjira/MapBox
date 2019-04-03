@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FriendBoxListFragment extends Fragment {
@@ -37,6 +38,12 @@ public class FriendBoxListFragment extends Fragment {
         return view;
     }
 
+    private void setupAdapter() {
+        if (isAdded()) {
+            mFriendBoxRecyclerView.setAdapter(new FriendBoxAdapter());
+        }
+    }
+
     private class FriendBoxHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
 
@@ -57,8 +64,14 @@ public class FriendBoxListFragment extends Fragment {
     private class FriendBoxAdapter extends RecyclerView.Adapter<FriendBoxHolder> {
         private List<FriendBox> mFriendBoxes;
 
-        public FriendBoxAdapter(List<FriendBox> friendBoxes) {
-            mFriendBoxes = friendBoxes;
+        public FriendBoxAdapter() {
+            mFriendBoxes = new ArrayList<>();
+            mFriendBoxes.add(new FriendBox("Anne", "Nguyen"));
+            mFriendBoxes.add(new FriendBox("Nixon", "Yiu"));
+            mFriendBoxes.add(new FriendBox("Kevin", "Lam"));
+            mFriendBoxes.add(new FriendBox("James", "Huang"));
+            mFriendBoxes.add(new FriendBox("Michael", "Lau"));
+            mFriendBoxes.add(new FriendBox("Joey", "Jirasevijinda"));
         }
 
         @NonNull
