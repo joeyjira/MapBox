@@ -1,21 +1,36 @@
 package com.joey.android.mapbox;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
+
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class FriendBoxListFragment extends Fragment {
     private static final String TAG = "FriendBoxListFragment";
+    private static final String[] LOCATION_PERMISSIONS = new String[] {
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+    };
+    private static final int REQUEST_LOCATION_PERMISSIONS = 0;
 
     private RecyclerView mFriendBoxRecyclerView;
 
@@ -33,12 +48,17 @@ public class FriendBoxListFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_friend_box_list, container, false);
 
-        mFriendBoxRecyclerView = view.findViewById(R.id.friend_box_recycler_view);
+        mFriendBoxRecyclerView = view.findViewById(R.id.map_box_recycler_view);
         mFriendBoxRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         setupAdapter();
 
         return view;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     private void setupAdapter() {
@@ -47,27 +67,57 @@ public class FriendBoxListFragment extends Fragment {
         }
     }
 
-    private class FriendBoxHolder extends RecyclerView.ViewHolder
-            implements View.OnClickListener {
+    private void findLocation() {
+//        LocationRequest request = LocationRequest.create();
+//        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+//        request.setNumUpdates(1);
+//        request.setInterval(0);
 
+        LocationServices.getFusedLocationProviderClient(getActivity())
+                .getLastLocation()
+                .addOnSuccessListener(getActivity(), new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        Log.i(TAG, "Got a fix: " + location);
+                    }
+                });
+    }
+
+    private boolean hasLocationPermission() {
+        int result = ContextCompat
+                .checkSelfPermission(getActivity(), LOCATION_PERMISSIONS[0]);
+        return result == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private class FriendBoxHolder extends RecyclerView.ViewHolder {
         private FriendBox mFriendBox;
 
         private TextView mFriendNameTextView;
+        private Button mLocationButton;
+
+        private View.OnClickListener locationOnClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (hasLocationPermission()) {
+                    findLocation();
+                } else {
+                    requestPermissions(LOCATION_PERMISSIONS,
+                            REQUEST_LOCATION_PERMISSIONS);
+                }
+            }
+        };
 
         public FriendBoxHolder(View friendBoxView) {
             super(friendBoxView);
 
             mFriendNameTextView = friendBoxView.findViewById(R.id.friend_name);
+            mLocationButton = friendBoxView.findViewById(R.id.button_get_location);
+            mLocationButton.setOnClickListener(locationOnClickListener);
         }
 
         public void bind(FriendBox friendBox) {
             mFriendBox = friendBox;
             mFriendNameTextView.setText(friendBox.getName());
-        }
-
-        @Override
-        public void onClick(View v) {
-
         }
     }
 

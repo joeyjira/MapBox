@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">MapBox</string>
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_friend_box">Friend Box</string>
+    <string name="title_inbox">Inbox</string>
+    <string name="title_requests">Requests</string>
 
     // FriendBox String
     <string name="get_location">Location</string>

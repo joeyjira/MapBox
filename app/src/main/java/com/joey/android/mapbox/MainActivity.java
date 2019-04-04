@@ -1,7 +1,10 @@
 package com.joey.android.mapbox;
 
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -9,25 +12,35 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
+
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
+    private static final int REQUEST_ERROR = 0;
 
     private TextView mTextMessage;
-    private Fragment mFragment;
+    private GoogleApiClient mClient;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            Fragment fragment;
+
             switch (item.getItemId()) {
-                case R.id.navigation_home:
-                    mFragment = FriendBoxListFragment.newInstance();
+                case R.id.navigation_friend_box:
+                    fragment = FriendBoxListFragment.newInstance();
+                    replaceFragment(fragment);
                     return true;
-                case R.id.navigation_dashboard:
-                    mTextMessage.setText(R.string.title_dashboard);
+                case R.id.navigation_inbox:
+                    fragment = InboxFragment.newInstance();
+                    replaceFragment(fragment);
                     return true;
-                case R.id.navigation_notifications:
-                    mTextMessage.setText(R.string.title_notifications);
+                case R.id.navigation_friend_request:
                     return true;
             }
             return false;
@@ -44,14 +57,71 @@ public class MainActivity extends AppCompatActivity {
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
         FragmentManager fm = getSupportFragmentManager();
-        mFragment = fm.findFragmentById(R.id.main_container);
+        Fragment fragment = fm.findFragmentById(R.id.main_container);
 
-        if (mFragment == null) {
-            mFragment = FriendBoxListFragment.newInstance();
+        if (fragment == null) {
+            fragment = FriendBoxListFragment.newInstance();
             fm.beginTransaction()
-                    .add(R.id.main_container, mFragment)
+                    .add(R.id.main_container, fragment)
                     .commit();
+        }
+
+        mClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                    @Override
+                    public void onConnected(@Nullable Bundle bundle) {
+
+                    }
+
+                    @Override
+                    public void onConnectionSuspended(int i) {
+
+                    }
+                })
+                .build();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        mClient.connect();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        mClient.disconnect();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        int errorCode = apiAvailability.isGooglePlayServicesAvailable(this);
+
+        if (errorCode != ConnectionResult.SUCCESS) {
+            Dialog errorDialog = apiAvailability
+                    .getErrorDialog(this, errorCode, REQUEST_ERROR,
+                            new DialogInterface.OnCancelListener() {
+                                @Override
+                                public void onCancel(DialogInterface dialog) {
+                                    // Leave if services are unavailable.
+                                    finish();
+                                }
+                            });
+
+            errorDialog.show();
         }
     }
 
+    private void replaceFragment(Fragment fragment) {
+        FragmentManager fm = getSupportFragmentManager();
+        fm.beginTransaction()
+                .replace(R.id.main_container, fragment)
+                .commit();
+    }
 }
