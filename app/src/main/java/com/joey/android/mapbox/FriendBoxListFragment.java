@@ -19,7 +19,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -130,7 +129,7 @@ public class FriendBoxListFragment extends Fragment {
 
     private class FriendBoxHolder extends RecyclerView.ViewHolder
             implements OnMapReadyCallback {
-        private FriendBox mFriendBox;
+        private Friend mFriend;
         private GoogleMap mGoogleMap;
 
         private TextView mFriendNameTextView;
@@ -159,9 +158,9 @@ public class FriendBoxListFragment extends Fragment {
             }
         }
 
-        public void bind(FriendBox friendBox) {
-            mFriendBox = friendBox;
-            mFriendNameTextView.setText(friendBox.getName());
+        public void bind(Friend friend) {
+            mFriend = friend;
+            mFriendNameTextView.setText(friend.getName());
 
             GoogleMap map = mGoogleMap;
             if (map != null) {
@@ -185,16 +184,16 @@ public class FriendBoxListFragment extends Fragment {
     }
 
     private class FriendBoxAdapter extends RecyclerView.Adapter<FriendBoxHolder> {
-        private List<FriendBox> mFriendBoxes;
+        private List<Friend> mFriends;
 
         public FriendBoxAdapter() {
-            mFriendBoxes = new ArrayList<>();
-            mFriendBoxes.add(new FriendBox("Anne", "Nguyen"));
-            mFriendBoxes.add(new FriendBox("Nixon", "Yiu"));
-            mFriendBoxes.add(new FriendBox("Kevin", "Lam"));
-            mFriendBoxes.add(new FriendBox("James", "Huang"));
-            mFriendBoxes.add(new FriendBox("Michael", "Lau"));
-            mFriendBoxes.add(new FriendBox("Joey", "Jirasevijinda"));
+            mFriends = new ArrayList<>();
+            mFriends.add(new Friend("Anne", "Nguyen"));
+            mFriends.add(new Friend("Nixon", "Yiu"));
+            mFriends.add(new Friend("Kevin", "Lam"));
+            mFriends.add(new Friend("James", "Huang"));
+            mFriends.add(new Friend("Michael", "Lau"));
+            mFriends.add(new Friend("Joey", "Jirasevijinda"));
         }
 
         @NonNull
@@ -207,13 +206,13 @@ public class FriendBoxListFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull FriendBoxHolder friendBoxHolder, int i) {
-            FriendBox friendBox = mFriendBoxes.get(i);
-            friendBoxHolder.bind(friendBox);
+            Friend friend = mFriends.get(i);
+            friendBoxHolder.bind(friend);
         }
 
         @Override
         public int getItemCount() {
-            return mFriendBoxes.size();
+            return mFriends.size();
         }
     }
 }
