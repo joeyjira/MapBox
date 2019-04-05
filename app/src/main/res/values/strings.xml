@@ -7,4 +7,5 @@
     // FriendBox String
     <string name="get_location">Location</string>
     <string name="leave_note">Note</string>
+    <string name="title_activity_maps">Map</string>
 </resources>

@@ -2,13 +2,14 @@
 <android.support.v7.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
+
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/card_friend_box"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    card_view:cardElevation="10dp"
-    card_view:cardCornerRadius="10dp">
+    card_view:cardElevation="8dp"
+    card_view:cardCornerRadius="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -25,7 +26,7 @@
             android:weightSum="1">
 
             <ImageView
-                android:id="@+id/imageView"
+                android:id="@+id/friend_pic"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:layout_marginBottom="1dp"
@@ -42,7 +43,7 @@
                 android:textAlignment="center"
                 card_view:layout_constraintEnd_toEndOf="parent"
                 card_view:layout_constraintStart_toStartOf="parent"
-                card_view:layout_constraintTop_toBottomOf="@id/imageView"
+                card_view:layout_constraintTop_toBottomOf="@id/friend_pic"
                 card_view:layout_constraintBottom_toTopOf="@id/button_get_location"/>
 
             <Button
@@ -70,6 +71,15 @@
                 card_view:layout_constraintStart_toStartOf="parent" />
 
         </android.support.constraint.ConstraintLayout>
-    </LinearLayout>
 
+        <com.google.android.gms.maps.MapView
+            xmlns:map="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/friend_box_map_view"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.7"
+            map:liteMode="true">
+
+        </com.google.android.gms.maps.MapView>
+    </LinearLayout>
 </android.support.v7.widget.CardView>
