@@ -41,6 +41,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".activity.AddFriendActivity"
+            android:parentActivityName=".activity.MainActivity">
+
+        </activity>
 
         <provider
             android:authorities="com.joey.android.mapbox.fileprovider"

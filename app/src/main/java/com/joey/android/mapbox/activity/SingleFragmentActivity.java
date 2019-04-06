@@ -1,4 +1,4 @@
-package com.joey.android.mapbox.fragment;
+package com.joey.android.mapbox.activity;
 
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;

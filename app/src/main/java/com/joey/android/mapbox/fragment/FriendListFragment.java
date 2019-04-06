@@ -1,6 +1,7 @@
 package com.joey.android.mapbox.fragment;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -31,6 +32,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.joey.android.mapbox.activity.AddFriendActivity;
 import com.joey.android.mapbox.model.Friend;
 import com.joey.android.mapbox.model.FriendList;
 import com.joey.android.mapbox.R;
@@ -112,14 +114,44 @@ public class FriendListFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.add_friend:
-                Intent intent;
+                Intent intent = AddFriendActivity.newIntent(getActivity());
                 startActivity(intent);
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        Log.i(TAG, "Fragment has been started");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        Log.i(TAG, "Fragment has resumed");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        Log.i(TAG, "Fragment has been destroeyd");
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        Log.i(TAG, "Fragment has been attached");
     }
 
     private void setupAdapter() {
