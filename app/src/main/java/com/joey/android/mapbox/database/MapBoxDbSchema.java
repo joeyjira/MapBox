@@ -8,6 +8,8 @@ public class MapBoxDbSchema {
             public static final String UUID = "uuid";
             public static final String FIRSTNAME = "firstName";
             public static final String LASTNAME = "lastName";
+            public static final String LONGITUDE = "longitude";
+            public static final String LATITUDE = "latitude";
         }
     }
 }

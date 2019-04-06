@@ -1,4 +1,4 @@
-package com.joey.android.mapbox;
+package com.joey.android.mapbox.model;
 
 import java.util.UUID;
 
@@ -11,9 +11,21 @@ public class Friend {
     private String mNickName;
 
     public Friend(String firstName, String lastName) {
-        mId = UUID.randomUUID();
+        this(UUID.randomUUID(), firstName, lastName);
+    }
+
+    public Friend(UUID id, String firstName, String lastName) {
+        mId = id;
         mFirstName = firstName;
         mLastName = lastName;
+    }
+
+    public String getFirstName() {
+        return mFirstName;
+    }
+
+    public String getLastName() {
+        return mLastName;
     }
 
     public String getName() {

@@ -1,4 +1,4 @@
-package com.joey.android.mapbox;
+package com.joey.android.mapbox.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
@@ -6,6 +6,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
+
+import com.joey.android.mapbox.R;
 
 public abstract class SingleFragmentActivity extends AppCompatActivity {
 

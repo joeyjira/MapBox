@@ -1,4 +1,4 @@
-package com.joey.android.mapbox;
+package com.joey.android.mapbox.model;
 
 public class Mail {
     private static final String TAG = "Mail";

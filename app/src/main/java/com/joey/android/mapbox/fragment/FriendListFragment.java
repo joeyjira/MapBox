@@ -1,4 +1,4 @@
-package com.joey.android.mapbox;
+package com.joey.android.mapbox.fragment;
 
 import android.Manifest;
 import android.content.Intent;
@@ -13,6 +13,9 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -28,12 +31,14 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.joey.android.mapbox.model.Friend;
+import com.joey.android.mapbox.model.FriendList;
+import com.joey.android.mapbox.R;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class FriendBoxListFragment extends Fragment {
-    private static final String TAG = "FriendBoxListFragment";
+public class FriendListFragment extends Fragment {
+    private static final String TAG = "FriendListFragment";
     private static final String[] LOCATION_PERMISSIONS = new String[] {
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION
@@ -41,7 +46,7 @@ public class FriendBoxListFragment extends Fragment {
     private static final int REQUEST_LOCATION_PERMISSIONS = 0;
     private static final int REQUEST_IMAGE_CODE = 1;
 
-    private RecyclerView mFriendBoxRecyclerView;
+    private RecyclerView mFriendListRecyclerView;
 
     private View.OnClickListener locationOnClickListener = new View.OnClickListener() {
         @Override
@@ -71,8 +76,8 @@ public class FriendBoxListFragment extends Fragment {
         }
     };
 
-    public static FriendBoxListFragment newInstance() {
-        return new FriendBoxListFragment();
+    public static FriendListFragment newInstance() {
+        return new FriendListFragment();
     }
 
     @Override
@@ -86,12 +91,21 @@ public class FriendBoxListFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_friend_box_list, container, false);
 
-        mFriendBoxRecyclerView = view.findViewById(R.id.map_box_recycler_view);
-        mFriendBoxRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mFriendListRecyclerView = view.findViewById(R.id.map_box_recycler_view);
+        mFriendListRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         setupAdapter();
 
         return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_friend_list, menu);
+
+        MenuItem addFriendItem = menu.findItem(R.id.add_friend);
+
     }
 
     @Override
@@ -101,7 +115,8 @@ public class FriendBoxListFragment extends Fragment {
 
     private void setupAdapter() {
         if (isAdded()) {
-            mFriendBoxRecyclerView.setAdapter(new FriendBoxAdapter());
+            List<Friend> friends = FriendList.get(getActivity()).getFriends();
+            mFriendListRecyclerView.setAdapter(new FriendListAdapter(friends));
         }
     }
 
@@ -110,7 +125,7 @@ public class FriendBoxListFragment extends Fragment {
 //        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 //        request.setNumUpdates(1);
 //        request.setInterval(0);
-
+        ContextCompat.checkSelfPermission(getActivity(), LOCATION_PERMISSIONS[0]);
         LocationServices.getFusedLocationProviderClient(getActivity())
                 .getLastLocation()
                 .addOnSuccessListener(getActivity(), new OnSuccessListener<Location>() {
@@ -127,7 +142,7 @@ public class FriendBoxListFragment extends Fragment {
         return result == PackageManager.PERMISSION_GRANTED;
     }
 
-    private class FriendBoxHolder extends RecyclerView.ViewHolder
+    private class FriendHolder extends RecyclerView.ViewHolder
             implements OnMapReadyCallback {
         private Friend mFriend;
         private GoogleMap mGoogleMap;
@@ -137,7 +152,7 @@ public class FriendBoxListFragment extends Fragment {
         private MapView mMapView;
         private ImageView mFriendImageView;
 
-        public FriendBoxHolder(View friendBoxView) {
+        public FriendHolder(View friendBoxView) {
             super(friendBoxView);
 
             mFriendNameTextView = friendBoxView.findViewById(R.id.friend_name);
@@ -170,8 +185,8 @@ public class FriendBoxListFragment extends Fragment {
 
         @Override
         public void onMapReady(GoogleMap googleMap) {
-            Log.i(TAG, "" + FriendBoxListFragment.this.getActivity());
-            MapsInitializer.initialize(FriendBoxListFragment.this.getActivity());
+            Log.i(TAG, "" + FriendListFragment.this.getActivity());
+            MapsInitializer.initialize(FriendListFragment.this.getActivity());
             mGoogleMap = googleMap;
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(37.448849,-121.898045), 13f));
             mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(37.448849,-121.898045)));
@@ -183,11 +198,11 @@ public class FriendBoxListFragment extends Fragment {
         }
     }
 
-    private class FriendBoxAdapter extends RecyclerView.Adapter<FriendBoxHolder> {
+    private class FriendListAdapter extends RecyclerView.Adapter<FriendHolder> {
         private List<Friend> mFriends;
 
-        public FriendBoxAdapter() {
-            mFriends = new ArrayList<>();
+        public FriendListAdapter(List<Friend> friends) {
+            mFriends = friends;
             mFriends.add(new Friend("Anne", "Nguyen"));
             mFriends.add(new Friend("Nixon", "Yiu"));
             mFriends.add(new Friend("Kevin", "Lam"));
@@ -198,16 +213,16 @@ public class FriendBoxListFragment extends Fragment {
 
         @NonNull
         @Override
-        public FriendBoxHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+        public FriendHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
             LayoutInflater inflater = LayoutInflater.from(getActivity());
             View view = inflater.inflate(R.layout.list_friend_box, viewGroup, false);
-            return new FriendBoxHolder(view);
+            return new FriendHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull FriendBoxHolder friendBoxHolder, int i) {
+        public void onBindViewHolder(@NonNull FriendHolder friendHolder, int i) {
             Friend friend = mFriends.get(i);
-            friendBoxHolder.bind(friend);
+            friendHolder.bind(friend);
         }
 
         @Override

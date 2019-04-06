@@ -1,4 +1,4 @@
-package com.joey.android.mapbox;
+package com.joey.android.mapbox.activity;
 
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -16,6 +16,9 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.joey.android.mapbox.fragment.InboxFragment;
+import com.joey.android.mapbox.R;
+import com.joey.android.mapbox.fragment.FriendListFragment;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -33,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
 
             switch (item.getItemId()) {
                 case R.id.navigation_friend_box:
-                    fragment = FriendBoxListFragment.newInstance();
+                    fragment = FriendListFragment.newInstance();
                     replaceFragment(fragment);
                     return true;
                 case R.id.navigation_inbox:
@@ -60,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
         Fragment fragment = fm.findFragmentById(R.id.main_container);
 
         if (fragment == null) {
-            fragment = FriendBoxListFragment.newInstance();
+            fragment = FriendListFragment.newInstance();
             fm.beginTransaction()
                     .add(R.id.main_container, fragment)
                     .commit();
