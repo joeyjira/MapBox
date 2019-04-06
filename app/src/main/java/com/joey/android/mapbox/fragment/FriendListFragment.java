@@ -83,6 +83,7 @@ public class FriendListFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
     }
 
     @Nullable
@@ -105,7 +106,15 @@ public class FriendListFragment extends Fragment {
         inflater.inflate(R.menu.fragment_friend_list, menu);
 
         MenuItem addFriendItem = menu.findItem(R.id.add_friend);
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.add_friend:
+                Intent intent;
+                startActivity(intent);
+        }
     }
 
     @Override
