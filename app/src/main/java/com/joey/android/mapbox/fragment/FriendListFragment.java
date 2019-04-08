@@ -306,8 +306,9 @@ public class FriendListFragment extends Fragment {
                                 uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                     }
 
-                    // Launching the Intent
-                    startActivityForResult(intent, REQUEST_IMAGE_CODE);
+                    // Launching the Intent with chooser
+                    Intent chooser = Intent.createChooser(intent, "Choose Image");
+                    startActivityForResult(chooser, REQUEST_IMAGE_CODE);
                 } else {
                     requestPermissions(STORAGE_PERMISSIONS,
                             REQUEST_STORAGE_PERMISSION) ;
