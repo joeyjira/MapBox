@@ -1,15 +1,22 @@
 package com.joey.android.mapbox.fragment;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -37,6 +44,7 @@ import com.joey.android.mapbox.model.Friend;
 import com.joey.android.mapbox.model.FriendList;
 import com.joey.android.mapbox.R;
 
+import java.io.File;
 import java.util.List;
 
 public class FriendListFragment extends Fragment {
@@ -45,38 +53,15 @@ public class FriendListFragment extends Fragment {
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION
     };
+    private static final String[] STORAGE_PERMISSIONS = new String[] {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+    };
     private static final int REQUEST_LOCATION_PERMISSIONS = 0;
-    private static final int REQUEST_IMAGE_CODE = 1;
+    private static final int REQUEST_STORAGE_PERMISSION = 1;
+    private static final int REQUEST_IMAGE_CODE = 2;
 
     private RecyclerView mFriendListRecyclerView;
-
-    private View.OnClickListener locationOnClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            if (hasLocationPermission()) {
-                findLocation();
-            } else {
-                requestPermissions(LOCATION_PERMISSIONS,
-                        REQUEST_LOCATION_PERMISSIONS);
-            }
-        }
-    };
-
-    private View.OnClickListener friendImageOnClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            // Create an Intent with action as ACTION_PICk
-            Intent intent = new Intent(Intent.ACTION_PICK);
-            // Sets the type as image/*. This ensures only components of type image are selected
-            intent.setType("image/*");
-            // We pass an extra array with the accepted mime types.
-            // This will ensure only components with these MIME types as targets.
-            String[] mimeTypes = {"image/jpeg", "image/png"};
-            intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
-            // Launching the Intent
-            startActivityForResult(intent, REQUEST_IMAGE_CODE);
-        }
-    };
+    private FriendListAdapter mAdapter;
 
     public static FriendListFragment newInstance() {
         return new FriendListFragment();
@@ -86,18 +71,20 @@ public class FriendListFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        Log.i(TAG, "onCreate is called");
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_friend_box_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_friend_list, container, false);
 
         mFriendListRecyclerView = view.findViewById(R.id.map_box_recycler_view);
         mFriendListRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        setupAdapter();
+        updateUI();
 
         return view;
     }
@@ -106,8 +93,6 @@ public class FriendListFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.fragment_friend_list, menu);
-
-        MenuItem addFriendItem = menu.findItem(R.id.add_friend);
     }
 
     @Override
@@ -127,6 +112,21 @@ public class FriendListFragment extends Fragment {
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+
+        Log.i(TAG, "requestCode:" + requestCode);
+
+
+        if (requestCode == REQUEST_IMAGE_CODE) {
+            // TODO: Revoke uri write permission
+
+        }
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
 
@@ -137,6 +137,7 @@ public class FriendListFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
+        updateUI();
         Log.i(TAG, "Fragment has resumed");
     }
 
@@ -152,13 +153,6 @@ public class FriendListFragment extends Fragment {
         super.onAttach(context);
 
         Log.i(TAG, "Fragment has been attached");
-    }
-
-    private void setupAdapter() {
-        if (isAdded()) {
-            List<Friend> friends = FriendList.get(getActivity()).getFriends();
-            mFriendListRecyclerView.setAdapter(new FriendListAdapter(friends));
-        }
     }
 
     private void findLocation() {
@@ -183,9 +177,30 @@ public class FriendListFragment extends Fragment {
         return result == PackageManager.PERMISSION_GRANTED;
     }
 
+    private boolean hasReadExternalStoragePermission() {
+        int result = ContextCompat
+                .checkSelfPermission(getActivity(), STORAGE_PERMISSIONS[0]);
+        return result == PackageManager.PERMISSION_GRANTED;
+    }
+
+    public void updateUI() {
+        FriendList friendList = FriendList.get(getActivity());
+        List<Friend> friends = friendList.getFriends();
+        Log.i(TAG, "Friends:" + friends.toString());
+
+        if (mAdapter == null) {
+            mAdapter = new FriendListAdapter(friends);
+            mFriendListRecyclerView.setAdapter(mAdapter);
+        } else {
+            mAdapter.setFriends(friends);
+            mAdapter.notifyDataSetChanged();
+        }
+    }
+
     private class FriendHolder extends RecyclerView.ViewHolder
             implements OnMapReadyCallback {
         private Friend mFriend;
+        private File mPhotoFile;
         private GoogleMap mGoogleMap;
 
         private TextView mFriendNameTextView;
@@ -193,19 +208,17 @@ public class FriendListFragment extends Fragment {
         private MapView mMapView;
         private ImageView mFriendImageView;
 
-        public FriendHolder(View friendBoxView) {
-            super(friendBoxView);
+        public FriendHolder(View friendListView) {
+            super(friendListView);
 
-            mFriendNameTextView = friendBoxView.findViewById(R.id.friend_name);
+            mFriendNameTextView = friendListView.findViewById(R.id.text_view_friend_name);
+            mLocationButton = friendListView.findViewById(R.id.button_get_location);
+            mFriendImageView = friendListView.findViewById(R.id.circle_image_view_friend);
+            mMapView = friendListView.findViewById(R.id.map_view_friend);
 
-            mLocationButton = friendBoxView.findViewById(R.id.button_get_location);
             mLocationButton.setOnClickListener(locationOnClickListener);
-
-            mFriendImageView = friendBoxView.findViewById(R.id.friend_pic);
             mFriendImageView.setOnClickListener(friendImageOnClickListener);
 
-            mMapView = friendBoxView.findViewById(R.id.friend_box_map_view);
-            Log.i(TAG, "" + mMapView);
             if (mMapView != null) {
                 // Initialise the MapView
                 mMapView.onCreate(null);
@@ -216,7 +229,15 @@ public class FriendListFragment extends Fragment {
 
         public void bind(Friend friend) {
             mFriend = friend;
-            mFriendNameTextView.setText(friend.getName());
+
+            mFriendNameTextView.setText(mFriend.getName());
+
+            mPhotoFile = FriendList.get(getActivity()).getPhotoFile(mFriend);
+            if (mPhotoFile.exists()) {
+                mFriendImageView.setImageBitmap(BitmapFactory.decodeFile(mPhotoFile.getPath()));
+            } else {
+                mFriendImageView.setImageDrawable(getResources().getDrawable(R.drawable.ic_profile_pic));
+            }
 
             GoogleMap map = mGoogleMap;
             if (map != null) {
@@ -237,6 +258,62 @@ public class FriendListFragment extends Fragment {
         private void setMapLocation() {
 
         }
+
+        private View.OnClickListener locationOnClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (hasLocationPermission()) {
+                    findLocation();
+                } else {
+                    requestPermissions(LOCATION_PERMISSIONS,
+                            REQUEST_LOCATION_PERMISSIONS);
+                }
+            }
+        };
+
+        private View.OnClickListener friendImageOnClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (hasReadExternalStoragePermission()) {
+                    Uri uri = FileProvider.getUriForFile(getActivity(),
+                            "com.joey.android.mapbox.fileprovider",
+                            mPhotoFile);
+                    Log.i(TAG, "" + uri);
+                    // Create an Intent with action as ACTION_PICk
+                    Intent intent = new Intent(Intent.ACTION_PICK);
+                    // Sets the type as image/*. This ensures only components of type image are selected
+                    intent.setType("image/*");
+                    // Put extra for gallery to return a cropped image
+                    intent.putExtra("crop", true);
+                    intent.putExtra("outputX", 200);
+                    intent.putExtra("outputY", 200);
+                    intent.putExtra("aspectX", 1);
+                    intent.putExtra("aspectY", 1);
+                    intent.putExtra("scale", true);
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                    intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+                    // We pass an extra array with the accepted mime types.
+                    // This will ensure only components with these MIME types as targets.
+                    String[] mimeTypes = {"image/jpeg", "image/png"};
+                    intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+
+                    List<ResolveInfo> galleryActivities = getActivity()
+                            .getPackageManager().queryIntentActivities(intent,
+                                    PackageManager.MATCH_DEFAULT_ONLY);
+
+                    for (ResolveInfo activity : galleryActivities) {
+                        getActivity().grantUriPermission(activity.activityInfo.packageName,
+                                uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    }
+
+                    // Launching the Intent
+                    startActivityForResult(intent, REQUEST_IMAGE_CODE);
+                } else {
+                    requestPermissions(STORAGE_PERMISSIONS,
+                            REQUEST_STORAGE_PERMISSION) ;
+                }
+            }
+        };
     }
 
     private class FriendListAdapter extends RecyclerView.Adapter<FriendHolder> {
@@ -244,31 +321,29 @@ public class FriendListFragment extends Fragment {
 
         public FriendListAdapter(List<Friend> friends) {
             mFriends = friends;
-            mFriends.add(new Friend("Anne", "Nguyen"));
-            mFriends.add(new Friend("Nixon", "Yiu"));
-            mFriends.add(new Friend("Kevin", "Lam"));
-            mFriends.add(new Friend("James", "Huang"));
-            mFriends.add(new Friend("Michael", "Lau"));
-            mFriends.add(new Friend("Joey", "Jirasevijinda"));
         }
 
         @NonNull
         @Override
-        public FriendHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+        public FriendHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
             LayoutInflater inflater = LayoutInflater.from(getActivity());
-            View view = inflater.inflate(R.layout.list_friend_box, viewGroup, false);
+            View view = inflater.inflate(R.layout.list_friend_list, viewGroup, false);
             return new FriendHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull FriendHolder friendHolder, int i) {
-            Friend friend = mFriends.get(i);
+        public void onBindViewHolder(@NonNull FriendHolder friendHolder, int position) {
+            Friend friend = mFriends.get(position);
             friendHolder.bind(friend);
         }
 
         @Override
         public int getItemCount() {
             return mFriends.size();
+        }
+
+        public void setFriends(List<Friend> friends) {
+            mFriends = friends;
         }
     }
 }

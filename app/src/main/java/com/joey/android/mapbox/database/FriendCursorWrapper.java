@@ -2,6 +2,8 @@ package com.joey.android.mapbox.database;
 
 import android.database.Cursor;
 import android.database.CursorWrapper;
+import android.net.Uri;
+import android.util.Log;
 
 import com.joey.android.mapbox.database.MapBoxDbSchema.FriendTable;
 import com.joey.android.mapbox.model.Friend;
@@ -9,6 +11,8 @@ import com.joey.android.mapbox.model.Friend;
 import java.util.UUID;
 
 public class FriendCursorWrapper extends CursorWrapper {
+    private static final String TAG = "FriendCursorWrapper";
+
     public FriendCursorWrapper(Cursor cursor) {
         super(cursor);
     }

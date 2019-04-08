@@ -2,5 +2,5 @@
 <paths>
     <files-path
         name="friend_photos"
-        path="images/" />
+        path="./images/" />
 </paths>

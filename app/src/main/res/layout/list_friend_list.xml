@@ -26,24 +26,23 @@
             android:weightSum="1">
 
             <ImageView
-                android:id="@+id/friend_pic"
+                android:id="@+id/circle_image_view_friend"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:layout_marginBottom="1dp"
-                android:background="@drawable/ic_profile_pic"
+                android:layout_margin="8dp"
                 card_view:layout_constraintEnd_toEndOf="parent"
                 card_view:layout_constraintStart_toStartOf="parent"
                 card_view:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:id="@+id/friend_name"
+                android:id="@+id/text_view_friend_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="1dp"
                 android:textAlignment="center"
                 card_view:layout_constraintEnd_toEndOf="parent"
                 card_view:layout_constraintStart_toStartOf="parent"
-                card_view:layout_constraintTop_toBottomOf="@id/friend_pic"
+                card_view:layout_constraintTop_toBottomOf="@id/circle_image_view_friend"
                 card_view:layout_constraintBottom_toTopOf="@id/button_get_location"/>
 
             <Button
@@ -52,11 +51,11 @@
                 android:layout_height="wrap_content"
                 android:text="@string/get_location"
                 android:textSize="10sp"
-                android:layout_marginBottom="1dp"
+                android:layout_margin="8dp"
                 card_view:layout_constraintBottom_toTopOf="@id/button_leave_note"
                 card_view:layout_constraintEnd_toEndOf="parent"
                 card_view:layout_constraintStart_toStartOf="parent"
-                card_view:layout_constraintTop_toBottomOf="@+id/friend_name" />
+                card_view:layout_constraintTop_toBottomOf="@+id/text_view_friend_name" />
 
             <Button
                 android:id="@+id/button_leave_note"
@@ -64,7 +63,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/leave_note"
                 android:textSize="10sp"
-                android:layout_marginBottom="1dp"
+                android:layout_margin="8dp"
                 card_view:layout_constraintTop_toBottomOf="@id/button_get_location"
                 card_view:layout_constraintBottom_toBottomOf="parent"
                 card_view:layout_constraintEnd_toEndOf="parent"
@@ -74,7 +73,7 @@
 
         <com.google.android.gms.maps.MapView
             xmlns:map="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/friend_box_map_view"
+            android:id="@+id/map_view_friend"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.7"

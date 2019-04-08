@@ -1,5 +1,7 @@
 package com.joey.android.mapbox.model;
 
+import android.net.Uri;
+
 import java.util.UUID;
 
 public class Friend {
