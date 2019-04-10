@@ -39,6 +39,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
 import com.joey.android.mapbox.activity.AddFriendActivity;
 import com.joey.android.mapbox.model.Friend;
 import com.joey.android.mapbox.model.FriendList;
@@ -195,6 +196,10 @@ public class FriendListFragment extends Fragment {
             mAdapter.setFriends(friends);
             mAdapter.notifyDataSetChanged();
         }
+    }
+
+    private void signOut() {
+        FirebaseAuth.getInstance().signOut();
     }
 
     private class FriendHolder extends RecyclerView.ViewHolder

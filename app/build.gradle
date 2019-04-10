@@ -26,14 +26,20 @@ dependencies {
     implementation 'com.android.support:support-vector-drawable:28.0.0'
     implementation 'com.android.support:support-media-compat:28.0.0'
     implementation 'com.android.support:support-v4:28.0.0'
+    // View dependencies
     implementation 'com.android.support:cardview-v7:28.0.0'
     implementation 'com.android.support:recyclerview-v7:28.0.0'
     implementation 'com.android.support:design:28.0.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
     implementation 'de.hdodenhof:circleimageview:3.0.0'
+    // Google Playstore dependencies
     implementation 'com.google.android.gms:play-services-maps:16.1.0'
     implementation 'com.google.android.gms:play-services-location:16.0.0'
+    implementation 'com.google.android.gms:play-services-auth:16.0.1'
+    // Firebase dependencies
     implementation 'com.google.firebase:firebase-core:16.0.8'
+    implementation 'com.google.firebase:firebase-auth:16.2.1'
+    implementation 'com.google.firebase:firebase-database:16.1.0'
 
     testImplementation 'junit:junit:4.12'
 

@@ -1,7 +1,9 @@
 package com.joey.android.mapbox.activity;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -16,16 +18,29 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.auth.FirebaseUser;
 import com.joey.android.mapbox.fragment.InboxFragment;
 import com.joey.android.mapbox.R;
 import com.joey.android.mapbox.fragment.FriendListFragment;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+
+    private static final String AUTHENTICATED_USER = "authenticatedUser";
+
     private static final int REQUEST_ERROR = 0;
+
 
     private TextView mTextMessage;
     private GoogleApiClient mClient;
+    private FirebaseUser mUser;
+
+    public static Intent newIntent(Context packageContext, FirebaseUser user) {
+        Intent intent = new Intent(packageContext, MainActivity.class);
+        intent.putExtra(AUTHENTICATED_USER, user);
+
+        return intent;
+    }
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -54,6 +69,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mUser = getIntent().getParcelableExtra(AUTHENTICATED_USER);
 
         mTextMessage = (TextView) findViewById(R.id.message);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
