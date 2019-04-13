@@ -19,14 +19,16 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
 import com.joey.android.mapbox.fragment.InboxFragment;
 import com.joey.android.mapbox.R;
-import com.joey.android.mapbox.fragment.FriendListFragment;
+import com.joey.android.mapbox.fragment.UserListFragment;
+import com.joey.android.mapbox.fragment.UserRequestFragment;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
-    private static final String AUTHENTICATED_USER = "authenticatedUser";
+    private static final String EXTRA_AUTHENTICATED_USER = "authenticatedUser";
 
     private static final int REQUEST_ERROR = 0;
 
@@ -34,11 +36,11 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTextMessage;
     private GoogleApiClient mClient;
     private FirebaseUser mUser;
+    private FirebaseDatabase mDatabase;
 
     public static Intent newIntent(Context packageContext, FirebaseUser user) {
         Intent intent = new Intent(packageContext, MainActivity.class);
-        intent.putExtra(AUTHENTICATED_USER, user);
-
+        intent.putExtra(EXTRA_AUTHENTICATED_USER, user);
         return intent;
     }
 
@@ -51,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
             switch (item.getItemId()) {
                 case R.id.navigation_friend_box:
-                    fragment = FriendListFragment.newInstance();
+                    fragment = UserListFragment.newInstance();
                     replaceFragment(fragment);
                     return true;
                 case R.id.navigation_inbox:
@@ -59,6 +61,12 @@ public class MainActivity extends AppCompatActivity {
                     replaceFragment(fragment);
                     return true;
                 case R.id.navigation_friend_request:
+                    fragment = UserRequestFragment.newInstance();
+                    replaceFragment(fragment);
+                    return true;
+                case R.id.navigation_settings:
+                    fragment = UserRequestFragment.newInstance();
+                    replaceFragment(fragment);
                     return true;
             }
             return false;
@@ -70,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mUser = getIntent().getParcelableExtra(AUTHENTICATED_USER);
+        mUser = getIntent().getParcelableExtra(EXTRA_AUTHENTICATED_USER);
 
         mTextMessage = (TextView) findViewById(R.id.message);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
@@ -80,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         Fragment fragment = fm.findFragmentById(R.id.main_container);
 
         if (fragment == null) {
-            fragment = FriendListFragment.newInstance();
+            fragment = UserListFragment.newInstance();
             fm.beginTransaction()
                     .add(R.id.main_container, fragment)
                     .commit();

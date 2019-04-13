@@ -4,9 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.LayoutRes;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
 
-import com.joey.android.mapbox.fragment.AddFriendFragment;
+import com.joey.android.mapbox.fragment.AddUserFragment;
 
 public class AddFriendActivity extends SingleFragmentActivity {
     private static final String TAG = "AddFriendActivity";
@@ -17,7 +16,7 @@ public class AddFriendActivity extends SingleFragmentActivity {
     }
     @Override
     protected Fragment createFragment() {
-        return AddFriendFragment.newInstance();
+        return AddUserFragment.newInstance();
     }
 
     @Override

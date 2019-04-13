@@ -1,5 +1,6 @@
 package com.joey.android.mapbox.activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -23,6 +24,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.joey.android.mapbox.R;
+import com.joey.android.mapbox.firebase.FirebaseHelper;
 
 public class SignInActivity extends AppCompatActivity {
     private static final String TAG = "SignInActivity";
@@ -33,13 +35,18 @@ public class SignInActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private SignInButton mSignInButton;
 
+    public static Intent newIntent(Context packageContext) {
+        Intent intent = new Intent(packageContext, SignInActivity.class);
+        return intent;
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("567926054386-lb8auk2oj0f9tukc2umhfjqt54e17h5f.apps.googleusercontent.com")
+                .requestIdToken(getString(R.string.firebase_token))
                 .requestEmail()
                 .build();
 
@@ -85,7 +92,11 @@ public class SignInActivity extends AppCompatActivity {
     }
 
     private void updateUI(FirebaseUser user) {
-
+        if (user != null) {
+            Log.i(TAG, "Email:" + user.getEmail());
+            Intent intent = MainActivity.newIntent(SignInActivity.this, user);
+            startActivity(intent);
+        }
     }
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount account) {
@@ -100,8 +111,8 @@ public class SignInActivity extends AppCompatActivity {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithCredential:success");
                             FirebaseUser user = mAuth.getCurrentUser();
-                            Intent intent = MainActivity.newIntent(SignInActivity.this, user);
-                            startActivity(intent);
+                            FirebaseHelper.get().saveUser(user, task.getResult().getAdditionalUserInfo().isNewUser());
+                            updateUI(user);
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "signInWithCredential:failure", task.getException());

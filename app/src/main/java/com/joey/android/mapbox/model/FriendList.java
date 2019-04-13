@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.util.Log;
 
 import com.joey.android.mapbox.database.FriendCursorWrapper;
@@ -38,16 +37,15 @@ public class FriendList {
                 .getWritableDatabase();
     }
 
-    public void addFriend(Friend friend) {
-        Log.i(TAG, "FriendName:" + friend.getFirstName());
-        ContentValues values = getContentValues(friend);
+    public void addFriend(User user) {
+        ContentValues values = getContentValues(user);
 
         mDatabase.insert(FriendTable.NAME, null, values);
     }
 
-    public void updateFriend(Friend friend) {
-        String uuidString = friend.getId().toString();
-        ContentValues values = getContentValues(friend);
+    public void updateFriend(User user) {
+        String uuidString = "placeholder";
+        ContentValues values = getContentValues(user);
 
         mDatabase.update(FriendTable.NAME, values,
                 FriendTable.Cols.UUID + " = ?",
@@ -68,8 +66,8 @@ public class FriendList {
         return new FriendCursorWrapper(cursor);
     }
 
-    public List<Friend> getFriends() {
-        List<Friend> friends = new ArrayList<>();
+    public List<User> getFriends() {
+        List<User> users = new ArrayList<>();
 
         FriendCursorWrapper cursor = queryFriends(null, null);
         Log.i(TAG, "Cursor checked 1");
@@ -77,7 +75,6 @@ public class FriendList {
             cursor.moveToFirst();
             Log.i(TAG, "Cursor checked 2");
             while (!cursor.isAfterLast()) {
-                friends.add(cursor.getFriend());
                 cursor.moveToNext();
                 Log.i(TAG, "Cursor checked 3");
             }
@@ -85,11 +82,11 @@ public class FriendList {
             cursor.close();
         }
 
-        Log.i(TAG, "Friends:" + friends);
-        return friends;
+        Log.i(TAG, "Friends:" + users);
+        return users;
     }
 
-    public Friend getFriend(UUID id) {
+    public User getFriend(UUID id) {
         FriendCursorWrapper cursor = queryFriends(
                 FriendTable.Cols.UUID + " = ?",
                 new String[] { id.toString() }
@@ -107,7 +104,7 @@ public class FriendList {
         }
     }
 
-    public File getPhotoFile(Friend friend) {
+    public File getPhotoFile(User user) {
         String folderName = "images";
         String folder = mContext.getFilesDir().getAbsolutePath() +
                 File.separator + folderName;
@@ -118,16 +115,16 @@ public class FriendList {
             subFolder.mkdirs();
         }
 
-        File filesDir = new File(subFolder, friend.getPhotoFilename());
+        File filesDir = new File(subFolder, user.getPhotoFilename());
 
         return filesDir;
     }
 
-    private static ContentValues getContentValues(Friend friend) {
+    private static ContentValues getContentValues(User user) {
         ContentValues values = new ContentValues();
-        values.put(FriendTable.Cols.UUID, friend.getId().toString());
-        values.put(FriendTable.Cols.FIRSTNAME, friend.getFirstName());
-        values.put(FriendTable.Cols.LASTNAME, friend.getLastName());
+//        values.put(FriendTable.Cols.UUID, user.getId().toString());
+//        values.put(FriendTable.Cols.FIRSTNAME, user.getFirstName());
+//        values.put(FriendTable.Cols.LASTNAME, user.getLastName());
 
         return values;
     }

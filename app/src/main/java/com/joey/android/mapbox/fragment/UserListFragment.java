@@ -41,15 +41,15 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.joey.android.mapbox.activity.AddFriendActivity;
-import com.joey.android.mapbox.model.Friend;
+import com.joey.android.mapbox.model.User;
 import com.joey.android.mapbox.model.FriendList;
 import com.joey.android.mapbox.R;
 
 import java.io.File;
 import java.util.List;
 
-public class FriendListFragment extends Fragment {
-    private static final String TAG = "FriendListFragment";
+public class UserListFragment extends Fragment {
+    private static final String TAG = "UserListFragment";
     private static final String[] LOCATION_PERMISSIONS = new String[] {
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION
@@ -64,8 +64,8 @@ public class FriendListFragment extends Fragment {
     private RecyclerView mFriendListRecyclerView;
     private FriendListAdapter mAdapter;
 
-    public static FriendListFragment newInstance() {
-        return new FriendListFragment();
+    public static UserListFragment newInstance() {
+        return new UserListFragment();
     }
 
     @Override
@@ -186,14 +186,14 @@ public class FriendListFragment extends Fragment {
 
     public void updateUI() {
         FriendList friendList = FriendList.get(getActivity());
-        List<Friend> friends = friendList.getFriends();
-        Log.i(TAG, "Friends:" + friends.toString());
+        List<User> users = friendList.getFriends();
+        Log.i(TAG, "Friends:" + users.toString());
 
         if (mAdapter == null) {
-            mAdapter = new FriendListAdapter(friends);
+            mAdapter = new FriendListAdapter(users);
             mFriendListRecyclerView.setAdapter(mAdapter);
         } else {
-            mAdapter.setFriends(friends);
+            mAdapter.setUsers(users);
             mAdapter.notifyDataSetChanged();
         }
     }
@@ -204,7 +204,7 @@ public class FriendListFragment extends Fragment {
 
     private class FriendHolder extends RecyclerView.ViewHolder
             implements OnMapReadyCallback {
-        private Friend mFriend;
+        private User mUser;
         private File mPhotoFile;
         private GoogleMap mGoogleMap;
 
@@ -232,12 +232,12 @@ public class FriendListFragment extends Fragment {
             }
         }
 
-        public void bind(Friend friend) {
-            mFriend = friend;
+        public void bind(User user) {
+            mUser = user;
 
-            mFriendNameTextView.setText(mFriend.getName());
+            mFriendNameTextView.setText(mUser.getName());
 
-            mPhotoFile = FriendList.get(getActivity()).getPhotoFile(mFriend);
+            mPhotoFile = FriendList.get(getActivity()).getPhotoFile(mUser);
             if (mPhotoFile.exists()) {
                 mFriendImageView.setImageBitmap(BitmapFactory.decodeFile(mPhotoFile.getPath()));
             } else {
@@ -252,8 +252,8 @@ public class FriendListFragment extends Fragment {
 
         @Override
         public void onMapReady(GoogleMap googleMap) {
-            Log.i(TAG, "" + FriendListFragment.this.getActivity());
-            MapsInitializer.initialize(FriendListFragment.this.getActivity());
+            Log.i(TAG, "" + UserListFragment.this.getActivity());
+            MapsInitializer.initialize(UserListFragment.this.getActivity());
             mGoogleMap = googleMap;
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(37.448849,-121.898045), 13f));
             mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(37.448849,-121.898045)));
@@ -323,10 +323,10 @@ public class FriendListFragment extends Fragment {
     }
 
     private class FriendListAdapter extends RecyclerView.Adapter<FriendHolder> {
-        private List<Friend> mFriends;
+        private List<User> mUsers;
 
-        public FriendListAdapter(List<Friend> friends) {
-            mFriends = friends;
+        public FriendListAdapter(List<User> users) {
+            mUsers = users;
         }
 
         @NonNull
@@ -339,17 +339,17 @@ public class FriendListFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull FriendHolder friendHolder, int position) {
-            Friend friend = mFriends.get(position);
-            friendHolder.bind(friend);
+            User user = mUsers.get(position);
+            friendHolder.bind(user);
         }
 
         @Override
         public int getItemCount() {
-            return mFriends.size();
+            return mUsers.size();
         }
 
-        public void setFriends(List<Friend> friends) {
-            mFriends = friends;
+        public void setUsers(List<User> users) {
+            mUsers = users;
         }
     }
 }
