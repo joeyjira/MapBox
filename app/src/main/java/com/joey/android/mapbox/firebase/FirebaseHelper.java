@@ -1,7 +1,6 @@
 package com.joey.android.mapbox.firebase;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -10,9 +9,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.joey.android.mapbox.model.User;
-
-import java.util.HashMap;
 
 public class FirebaseHelper {
     private static final String TAG = "FirebaseHelper";
@@ -48,14 +44,21 @@ public class FirebaseHelper {
         }
     }
 
+    // Class that uses this method must implement FirebaseHelper.Callbacks
     public void getUidFromEmail(String email, final Callbacks callbacks) {
         DatabaseReference emailRef = mReference.child("emails").child(encodeEmail(email));
 
         emailRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                String uid = dataSnapshot.getValue().toString();
-                callbacks.updateUid(uid);
+                String uid;
+                if (dataSnapshot.exists()) {
+                    uid = dataSnapshot.getValue().toString();
+                } else {
+                    uid = null;
+                }
+
+                callbacks.onReceiveUid(uid);
             }
 
             @Override
@@ -64,17 +67,21 @@ public class FirebaseHelper {
             }
         });
     }
-
-    public void getUserFromUid(String uid, final Callbacks callbacks) {
+    // Class that uses this method must implement FirebaseHelper.Callbacks
+    public void getUserFromUid(String uid, final Callbacks callback) {
         DatabaseReference userRef = mReference.child("users").child(uid).child("name");
 
         userRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String name;
                 if (dataSnapshot.exists()) {
-                    String name = dataSnapshot.getValue().toString();
-                    callbacks.updateName(name);
+                    name = dataSnapshot.getValue().toString();
+                } else {
+                    name = null;
                 }
+
+                callback.onReceiveName(name);
             }
 
             @Override
@@ -85,7 +92,42 @@ public class FirebaseHelper {
     }
 
     public void addUserRequest(String uid) {
-        mReference.child("friendRequests").child(uid).push().setValue(mUser.getUid());
+        DatabaseReference friendRef = mReference.child("friends")
+                .child(uid).child(mUser.getUid());
+        final DatabaseReference friendReq = mReference.child("friendRequests")
+                .child(uid).child(mUser.getUid());
+
+        friendRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (!dataSnapshot.exists()) {
+                    friendReq.setValue(false);
+                } else {
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    public void isFriend(String uid) {
+        DatabaseReference friendRef = mReference.child("friends").child(uid).child(mUser.getUid());
+
+        friendRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                boolean isFriend = dataSnapshot.exists();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private String encodeEmail(String email) {
@@ -97,8 +139,8 @@ public class FirebaseHelper {
     }
 
     public interface Callbacks {
-        abstract void updateUid(String uid);
+        void onReceiveUid(String uid);
 
-        abstract void updateName(String name);
+        void onReceiveName(String name);
     }
 }

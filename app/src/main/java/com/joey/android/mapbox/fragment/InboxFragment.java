@@ -33,9 +33,9 @@ public class InboxFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_friend_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_recycler_view, container, false);
 
-        mInboxRecyclerView = view.findViewById(R.id.map_box_recycler_view);
+        mInboxRecyclerView = view.findViewById(R.id.recycler_view_map_box);
         mInboxRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         setupAdapter();
@@ -88,7 +88,7 @@ public class InboxFragment extends Fragment {
         @Override
         public InboxHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
             LayoutInflater inflater = LayoutInflater.from(getActivity());
-            View view = inflater.inflate(R.layout.list_inbox, viewGroup, false);
+            View view = inflater.inflate(R.layout.viewholder_inbox, viewGroup, false);
             return new InboxHolder(view);
         }
 

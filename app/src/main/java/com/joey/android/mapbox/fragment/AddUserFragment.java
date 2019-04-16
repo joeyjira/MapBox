@@ -45,35 +45,46 @@ public class AddUserFragment extends Fragment
                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_add_friend, container, false);
 
-        mEmailText = (EditText) view.findViewById(R.id.edit_email);
+        mEmailText = view.findViewById(R.id.edit_email);
 
-        mGetUserButton = (Button) view.findViewById(R.id.button_get_user);
+        mGetUserButton = view.findViewById(R.id.button_get_user);
         mGetUserButton.setOnClickListener(getUserOnClickListener);
 
-        mAddUserButton = (Button) view.findViewById(R.id.button_add_user);
+        mAddUserButton = view.findViewById(R.id.button_add_user);
         mAddUserButton.setOnClickListener(addUserOnClickListener);
 
-        mUserNameText = (TextView) view.findViewById(R.id.add_friend_name);
+        mUserNameText = view.findViewById(R.id.add_friend_name);
 
         return view;
     }
 
     @Override
-    public void updateUid(String uid) {
+    public void onReceiveUid(String uid) {
         mUserUid = uid;
-        mFirebaseHelper.getUserFromUid(uid, AddUserFragment.this);
+
+        if (uid != null) {
+            mFirebaseHelper.getUserFromUid(uid, AddUserFragment.this);
+        } else {
+            // Update view so user knows that email doesn't exist
+        }
     }
 
     @Override
-    public void updateName(String name) {
+    public void onReceiveName(String name) {
         mName = name;
-        mUserNameText.setText(mName);
+
+        if (name != null) {
+            mUserNameText.setText(mName);
+            mAddUserButton.setVisibility(View.VISIBLE);
+        } else {
+            mAddUserButton.setVisibility(View.GONE);
+        }
     }
 
     View.OnClickListener getUserOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            String email = mEmailText.getText().toString();
+            String email = mEmailText.getText().toString().trim().toLowerCase();
             mFirebaseHelper.getUidFromEmail(email, AddUserFragment.this);
         }
     };
@@ -81,7 +92,9 @@ public class AddUserFragment extends Fragment
     View.OnClickListener addUserOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            Log.i(TAG, "Before");
             mFirebaseHelper.addUserRequest(mUserUid);
+            Log.i(TAG, "After");
         }
     };
 }

@@ -21,9 +21,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -40,7 +37,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
-import com.joey.android.mapbox.activity.AddFriendActivity;
 import com.joey.android.mapbox.model.User;
 import com.joey.android.mapbox.model.FriendList;
 import com.joey.android.mapbox.R;
@@ -72,39 +68,20 @@ public class UserListFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-
-        Log.i(TAG, "onCreate is called");
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_friend_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_recycler_view, container, false);
 
-        mFriendListRecyclerView = view.findViewById(R.id.map_box_recycler_view);
+        mFriendListRecyclerView = view.findViewById(R.id.recycler_view_map_box);
         mFriendListRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         updateUI();
 
         return view;
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.fragment_friend_list, menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.add_friend:
-                Intent intent = AddFriendActivity.newIntent(getActivity());
-                startActivity(intent);
-            default:
-                return super.onOptionsItemSelected(item);
-        }
     }
 
     @Override
@@ -202,6 +179,37 @@ public class UserListFragment extends Fragment {
         FirebaseAuth.getInstance().signOut();
     }
 
+    private class FriendListAdapter extends RecyclerView.Adapter<FriendHolder> {
+        private List<User> mUsers;
+
+        public FriendListAdapter(List<User> users) {
+            mUsers = users;
+        }
+
+        @NonNull
+        @Override
+        public FriendHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
+            LayoutInflater inflater = LayoutInflater.from(getActivity());
+            View view = inflater.inflate(R.layout.viewholder_friend_list, viewGroup, false);
+            return new FriendHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull FriendHolder friendHolder, int position) {
+            User user = mUsers.get(position);
+            friendHolder.bind(user);
+        }
+
+        @Override
+        public int getItemCount() {
+            return mUsers.size();
+        }
+
+        public void setUsers(List<User> users) {
+            mUsers = users;
+        }
+    }
+
     private class FriendHolder extends RecyclerView.ViewHolder
             implements OnMapReadyCallback {
         private User mUser;
@@ -213,13 +221,13 @@ public class UserListFragment extends Fragment {
         private MapView mMapView;
         private ImageView mFriendImageView;
 
-        public FriendHolder(View friendListView) {
-            super(friendListView);
+        public FriendHolder(View view) {
+            super(view);
 
-            mFriendNameTextView = friendListView.findViewById(R.id.text_view_friend_name);
-            mLocationButton = friendListView.findViewById(R.id.button_get_location);
-            mFriendImageView = friendListView.findViewById(R.id.circle_image_view_friend);
-            mMapView = friendListView.findViewById(R.id.map_view_friend);
+            mFriendNameTextView = view.findViewById(R.id.text_view_friend_name);
+            mLocationButton = view.findViewById(R.id.button_get_location);
+            mFriendImageView = view.findViewById(R.id.circle_image_view_friend);
+            mMapView = view.findViewById(R.id.map_view_friend);
 
             mLocationButton.setOnClickListener(locationOnClickListener);
             mFriendImageView.setOnClickListener(friendImageOnClickListener);
@@ -322,34 +330,4 @@ public class UserListFragment extends Fragment {
         };
     }
 
-    private class FriendListAdapter extends RecyclerView.Adapter<FriendHolder> {
-        private List<User> mUsers;
-
-        public FriendListAdapter(List<User> users) {
-            mUsers = users;
-        }
-
-        @NonNull
-        @Override
-        public FriendHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
-            LayoutInflater inflater = LayoutInflater.from(getActivity());
-            View view = inflater.inflate(R.layout.list_friend_list, viewGroup, false);
-            return new FriendHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull FriendHolder friendHolder, int position) {
-            User user = mUsers.get(position);
-            friendHolder.bind(user);
-        }
-
-        @Override
-        public int getItemCount() {
-            return mUsers.size();
-        }
-
-        public void setUsers(List<User> users) {
-            mUsers = users;
-        }
-    }
 }
