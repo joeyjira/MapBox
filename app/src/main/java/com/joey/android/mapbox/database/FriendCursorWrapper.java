@@ -13,6 +13,6 @@ public class FriendCursorWrapper extends CursorWrapper {
     }
 
     public User getFriend() {
-        return new User("askdlfjlsaf", "joey jirasev", "asdf@gmail.com");
+        return new User("askdlfjlsaf", "joey jirasev");
     }
 }

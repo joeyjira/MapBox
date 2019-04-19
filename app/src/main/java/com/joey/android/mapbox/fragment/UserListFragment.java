@@ -67,7 +67,6 @@ public class UserListFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
     }
 
     @Nullable
@@ -164,7 +163,6 @@ public class UserListFragment extends Fragment {
     public void updateUI() {
         FriendList friendList = FriendList.get(getActivity());
         List<User> users = friendList.getFriends();
-        Log.i(TAG, "Friends:" + users.toString());
 
         if (mAdapter == null) {
             mAdapter = new FriendListAdapter(users);
@@ -224,10 +222,10 @@ public class UserListFragment extends Fragment {
         public FriendHolder(View view) {
             super(view);
 
-            mFriendNameTextView = view.findViewById(R.id.text_view_friend_name);
-            mLocationButton = view.findViewById(R.id.button_get_location);
-            mFriendImageView = view.findViewById(R.id.circle_image_view_friend);
-            mMapView = view.findViewById(R.id.map_view_friend);
+            mFriendNameTextView = view.findViewById(R.id.viewholder_friend_list_name);
+            mLocationButton = view.findViewById(R.id.viewholder_friend_list_get_location);
+            mFriendImageView = view.findViewById(R.id.viewholder_friend_list_image);
+            mMapView = view.findViewById(R.id.viewholder_friend_list_map);
 
             mLocationButton.setOnClickListener(locationOnClickListener);
             mFriendImageView.setOnClickListener(friendImageOnClickListener);

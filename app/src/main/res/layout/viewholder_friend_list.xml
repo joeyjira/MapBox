@@ -4,7 +4,7 @@
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:app="http://schemas.android.com/apk/res-auto"
 
-    android:id="@+id/card_friend_box"
+    android:id="@+id/viewholder_friend_list_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
@@ -26,7 +26,7 @@
             android:weightSum="1">
 
             <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/circle_image_view_friend"
+                android:id="@+id/viewholder_friend_list_image"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:layout_margin="8dp"
@@ -37,36 +37,36 @@
                 card_view:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:id="@+id/text_view_friend_name"
+                android:id="@+id/viewholder_friend_list_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="1dp"
                 android:textAlignment="center"
                 card_view:layout_constraintEnd_toEndOf="parent"
                 card_view:layout_constraintStart_toStartOf="parent"
-                card_view:layout_constraintTop_toBottomOf="@id/circle_image_view_friend"
-                card_view:layout_constraintBottom_toTopOf="@id/button_get_location"/>
+                card_view:layout_constraintTop_toBottomOf="@id/viewholder_friend_list_image"
+                card_view:layout_constraintBottom_toTopOf="@id/viewholder_friend_list_get_location"/>
 
             <Button
-                android:id="@+id/button_get_location"
+                android:id="@+id/viewholder_friend_list_get_location"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/get_location"
                 android:textSize="10sp"
                 android:layout_margin="8dp"
-                card_view:layout_constraintBottom_toTopOf="@id/button_leave_note"
+                card_view:layout_constraintBottom_toTopOf="@id/viewholder_friend_list_send_location"
                 card_view:layout_constraintEnd_toEndOf="parent"
                 card_view:layout_constraintStart_toStartOf="parent"
-                card_view:layout_constraintTop_toBottomOf="@+id/text_view_friend_name" />
+                card_view:layout_constraintTop_toBottomOf="@+id/viewholder_friend_list_name" />
 
             <Button
-                android:id="@+id/button_leave_note"
+                android:id="@+id/viewholder_friend_list_send_location"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/leave_note"
                 android:textSize="10sp"
                 android:layout_margin="8dp"
-                card_view:layout_constraintTop_toBottomOf="@id/button_get_location"
+                card_view:layout_constraintTop_toBottomOf="@id/viewholder_friend_list_get_location"
                 card_view:layout_constraintBottom_toBottomOf="parent"
                 card_view:layout_constraintEnd_toEndOf="parent"
                 card_view:layout_constraintStart_toStartOf="parent" />
@@ -75,7 +75,7 @@
 
         <com.google.android.gms.maps.MapView
             xmlns:map="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/map_view_friend"
+            android:id="@+id/viewholder_friend_list_map"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.7"

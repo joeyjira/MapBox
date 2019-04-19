@@ -8,4 +8,10 @@
     <string name="get_location">Location</string>
     <string name="leave_note">Note</string>
     <string name="title_activity_maps">Map</string>
+
+    // AddUserFragment
+    <string name="pending_request">Pending...</string>
+    <string name="existing_friend">Friended</string>
+    <string name="add_friend">Send Request</string>
+    <string name="sent_request">Sent!</string>
 </resources>

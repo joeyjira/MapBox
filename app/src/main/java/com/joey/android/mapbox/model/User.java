@@ -5,12 +5,15 @@ public class User {
 
     private String mUid;
     private String mName;
+    private String mPhotoUri;
     private String mEmail;
 
-    public User(String uid, String name, String email) {
+    public User() {
+    }
+
+    public User(String uid, String name) {
         mUid = uid;
         mName = name;
-        mEmail = email;
     }
 
     public String getPhotoFilename() {
@@ -40,5 +43,18 @@ public class User {
 
     public void setEmail(String email) {
         mEmail = email;
+    }
+
+    public String getPhotoUri() {
+        return mPhotoUri;
+    }
+
+    public void setPhotoUri(String photoUri) {
+        mPhotoUri = photoUri;
+    }
+
+    public String toString() {
+        String user = "UID: " + getUid() + ", Name: " + getName() + ", Email: " + getEmail();
+        return user;
     }
 }
