@@ -19,4 +19,8 @@ public class MapBoxFBSchema {
         public static String EMAIL = "email";
         public static String PHOTO_URI = "photoUri";
     }
+
+    public static final class FriendsChild {
+        public static String REQUEST_LOCATION = "requestLocation";
+    }
 }

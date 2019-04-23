@@ -21,6 +21,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.joey.android.mapbox.R;
 import com.joey.android.mapbox.activity.SignInActivity;
+import com.joey.android.mapbox.firebase.MapBoxFBSchema;
 import com.joey.android.mapbox.firebase.MapBoxFBSchema.Reference;
 import com.joey.android.mapbox.model.User;
 
@@ -155,11 +156,13 @@ public class UserRequestFragment extends FirebaseFragment {
             if (doesAccept) {
                 friendRef.child(getUid())
                         .child(mUser.getUid())
-                        .setValue(true);
+                        .child(MapBoxFBSchema.FriendsChild.REQUEST_LOCATION)
+                        .setValue(false);
 
                 friendRef.child(mUser.getUid())
                         .child(getUid())
-                        .setValue(true);
+                        .child(MapBoxFBSchema.FriendsChild.REQUEST_LOCATION)
+                        .setValue(false);
             }
 
             friendRequestRef.child(getUid()).child(mUser.getUid()).removeValue();
@@ -191,7 +194,6 @@ public class UserRequestFragment extends FirebaseFragment {
 
                     for (String uid : uids) {
                         User user = dataSnapshot.child(uid).getValue(User.class);
-                        user.setUid(uid);
                         mRequests.add(user);
                     }
 

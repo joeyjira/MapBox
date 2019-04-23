@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.widget.LinearLayoutManager;
@@ -37,14 +36,21 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.joey.android.mapbox.firebase.MapBoxFBSchema.Reference;
 import com.joey.android.mapbox.model.User;
 import com.joey.android.mapbox.model.FriendList;
 import com.joey.android.mapbox.R;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
-public class UserListFragment extends Fragment {
+public class UserListFragment extends FirebaseFragment {
     private static final String TAG = "UserListFragment";
     private static final String[] LOCATION_PERMISSIONS = new String[] {
             Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -57,6 +63,9 @@ public class UserListFragment extends Fragment {
     private static final int REQUEST_STORAGE_PERMISSION = 1;
     private static final int REQUEST_IMAGE_CODE = 2;
 
+    private DatabaseReference mFriendsReference;
+    private DatabaseReference mUsersReference;
+
     private RecyclerView mFriendListRecyclerView;
     private FriendListAdapter mAdapter;
 
@@ -67,6 +76,11 @@ public class UserListFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
+
+        mFriendsReference = reference.child(Reference.FRIENDS).child(getUid());
+        mUsersReference = reference.child(Reference.USERS);
     }
 
     @Nullable
@@ -161,14 +175,10 @@ public class UserListFragment extends Fragment {
     }
 
     public void updateUI() {
-        FriendList friendList = FriendList.get(getActivity());
-        List<User> users = friendList.getFriends();
-
         if (mAdapter == null) {
-            mAdapter = new FriendListAdapter(users);
+            mAdapter = new FriendListAdapter();
             mFriendListRecyclerView.setAdapter(mAdapter);
         } else {
-            mAdapter.setUsers(users);
             mAdapter.notifyDataSetChanged();
         }
     }
@@ -178,10 +188,10 @@ public class UserListFragment extends Fragment {
     }
 
     private class FriendListAdapter extends RecyclerView.Adapter<FriendHolder> {
-        private List<User> mUsers;
+        private List<User> mUsers = new ArrayList<>();
 
-        public FriendListAdapter(List<User> users) {
-            mUsers = users;
+        public FriendListAdapter() {
+            mFriendsReference.addValueEventListener(friendListListener);
         }
 
         @NonNull
@@ -206,6 +216,40 @@ public class UserListFragment extends Fragment {
         public void setUsers(List<User> users) {
             mUsers = users;
         }
+
+        ValueEventListener friendListListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                final List<String> uids = new ArrayList<>();
+
+                for(DataSnapshot data : dataSnapshot.getChildren()) {
+                    String uid = data.getKey();
+                    uids.add(uid);
+                }
+
+                mUsersReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for (String uid : uids) {
+                            User user = dataSnapshot.child(uid).getValue(User.class);
+                            mUsers.add(user);
+                        }
+
+                        notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        };
     }
 
     private class FriendHolder extends RecyclerView.ViewHolder
@@ -215,7 +259,7 @@ public class UserListFragment extends Fragment {
         private GoogleMap mGoogleMap;
 
         private TextView mFriendNameTextView;
-        private Button mLocationButton;
+        private Button mRequestLocationButton;
         private MapView mMapView;
         private ImageView mFriendImageView;
 
@@ -223,11 +267,11 @@ public class UserListFragment extends Fragment {
             super(view);
 
             mFriendNameTextView = view.findViewById(R.id.viewholder_friend_list_name);
-            mLocationButton = view.findViewById(R.id.viewholder_friend_list_get_location);
+            mRequestLocationButton = view.findViewById(R.id.viewholder_friend_list_get_location);
             mFriendImageView = view.findViewById(R.id.viewholder_friend_list_image);
             mMapView = view.findViewById(R.id.viewholder_friend_list_map);
 
-            mLocationButton.setOnClickListener(locationOnClickListener);
+            mRequestLocationButton.setOnClickListener(locationOnClickListener);
             mFriendImageView.setOnClickListener(friendImageOnClickListener);
 
             if (mMapView != null) {
@@ -270,15 +314,17 @@ public class UserListFragment extends Fragment {
 
         }
 
-        private View.OnClickListener locationOnClickListener = new View.OnClickListener() {
+        private View.OnClickListener RequestLocationOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (hasLocationPermission()) {
-                    findLocation();
-                } else {
-                    requestPermissions(LOCATION_PERMISSIONS,
-                            REQUEST_LOCATION_PERMISSIONS);
-                }
+//                if (hasLocationPermission()) {
+//                    findLocation();
+//                } else {
+//                    requestPermissions(LOCATION_PERMISSIONS,
+//                            REQUEST_LOCATION_PERMISSIONS);
+//                }
+
+
             }
         };
 

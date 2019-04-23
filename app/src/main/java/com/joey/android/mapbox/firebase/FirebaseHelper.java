@@ -22,7 +22,6 @@ public class FirebaseHelper {
 
     private FirebaseUser mUser;
     private DatabaseReference mReference;
-    private Callbacks mCallback;
 
     public static FirebaseHelper get() {
         if (sFirebaseHelper == null) {
@@ -53,13 +52,5 @@ public class FirebaseHelper {
 
     private String encodeEmail(String email) {
         return email.replace(".", ",");
-    }
-
-    public interface Callbacks {
-        void onReceiveUid(String uid);
-
-        void onReceiveName(String name);
-
-        void onReceiveUsers(List<User> users);
     }
 }
