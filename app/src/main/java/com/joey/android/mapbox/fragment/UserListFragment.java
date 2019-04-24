@@ -19,6 +19,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v4.util.Pair;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -57,7 +58,9 @@ import com.joey.android.mapbox.R;
 import java.io.File;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UserListFragment extends FirebaseFragment {
     private static final String TAG = "UserListFragment";
@@ -246,21 +249,35 @@ public class UserListFragment extends FirebaseFragment {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 final List<AbstractMap.SimpleImmutableEntry<String, Boolean>> uidEntries = new ArrayList<>();
+                final Map<String, LatLng> locationMap = new HashMap<>();
                 mUsers.clear();
 
                 for(DataSnapshot data : dataSnapshot.getChildren()) {
                     String uid = data.getKey();
+                    if (data.child(MapBoxFBSchema.FriendsChild.LATITUDE).exists()) {
+                        Double latitude = (Double) data.child(MapBoxFBSchema.FriendsChild.LATITUDE).getValue();
+                        Double longitude = (Double) data.child(MapBoxFBSchema.FriendsChild.LONGITUDE).getValue();
+                        locationMap.put(uid,
+                                new LatLng(latitude, longitude));
+                    }
                     Boolean isRequesting = (Boolean) data.child(MapBoxFBSchema.FriendsChild.REQUEST_LOCATION).getValue();
                     uidEntries.add(new AbstractMap.SimpleImmutableEntry<>(uid, isRequesting));
+
                 }
 
                 mUsersReference.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         for (AbstractMap.SimpleImmutableEntry entry : uidEntries) {
-                            User user = dataSnapshot.child(entry.getKey().toString())
+                            String uid = entry.getKey().toString();
+                            User user = dataSnapshot.child(uid)
                                     .getValue(User.class);
                             user.setRequesting((boolean) entry.getValue());
+
+                            if (locationMap.containsKey(uid)) {
+                                user.setLatLng(locationMap.get(uid));
+                            }
+
                             mUsers.add(user);
                         }
 
@@ -319,6 +336,12 @@ public class UserListFragment extends FirebaseFragment {
 
             mFriendNameTextView.setText(mUser.getName());
 
+            if (mLocation == null) {
+                mSendLocationButton.setEnabled(false);
+            } else {
+                mSendLocationButton.setEnabled(true);
+            }
+
             if (user.isRequesting()) {
                 mSendLocationButton.setBackgroundColor(getResources().getColor(R.color.colorBorder));
             } else {
@@ -340,28 +363,23 @@ public class UserListFragment extends FirebaseFragment {
 
         @Override
         public void onMapReady(GoogleMap googleMap) {
-            Log.i(TAG, "" + UserListFragment.this.getActivity());
+            LatLng userLatLng = mUser.getLatLng();
             MapsInitializer.initialize(UserListFragment.this.getActivity());
             mGoogleMap = googleMap;
-            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(37.448849,-121.898045), 13f));
-            mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(37.448849,-121.898045)));
             mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+            if (userLatLng != null) {
+                setMapLocation(userLatLng);
+            }
         }
 
-        private void setMapLocation() {
-
+        private void setMapLocation(LatLng userLatLng) {
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 13f));
+            mGoogleMap.addMarker(new MarkerOptions().position(userLatLng));
         }
 
         private View.OnClickListener requestLocationOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                if (hasLocationPermission()) {
-//                    findLocation();
-//                } else {
-//                    requestPermissions(LOCATION_PERMISSIONS,
-//                            REQUEST_LOCATION_PERMISSIONS);
-//                }
-
                 mFriendsReference.child(mUser.getUid())
                         .child(getUid())
                         .child(MapBoxFBSchema.FriendsChild.REQUEST_LOCATION)
@@ -372,16 +390,21 @@ public class UserListFragment extends FirebaseFragment {
         private View.OnClickListener sendLocationOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mLocation != null) {
-                    mFriendsReference.child(mUser.getUid())
-                            .child(getUid())
-                            .child(MapBoxFBSchema.FriendsChild.LATITUDE)
-                            .setValue(mLocation.getLatitude());
+                DatabaseReference friendRef =  mFriendsReference.child(mUser.getUid())
+                        .child(getUid());
+                DatabaseReference userRef = mFriendsReference.child(getUid())
+                        .child(mUser.getUid());
 
-                    mFriendsReference.child(mUser.getUid())
-                            .child(getUid())
-                            .child(MapBoxFBSchema.FriendsChild.LONGITUDE)
-                            .setValue(mLocation.getLongitude());
+                if (mLocation != null) {
+                            friendRef.child(MapBoxFBSchema.FriendsChild.LATITUDE)
+                                    .setValue(mLocation.getLatitude());
+
+                            friendRef.child(MapBoxFBSchema.FriendsChild.LONGITUDE)
+                                    .setValue(mLocation.getLongitude());
+
+                            userRef.child(MapBoxFBSchema.FriendsChild.REQUEST_LOCATION)
+                                    .setValue(false);
+
                 }
             }
         };
@@ -440,11 +463,10 @@ public class UserListFragment extends FirebaseFragment {
             }
 
             for (Location location : locationResult.getLocations()) {
-                double longitude = location.getLongitude();
-                double latitude = location.getLatitude();
-
                 mLocation = location;
             }
+
+            mAdapter.notifyDataSetChanged();
         }
     };
 }

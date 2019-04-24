@@ -1,5 +1,7 @@
 package com.joey.android.mapbox.model;
 
+import com.google.android.gms.maps.model.LatLng;
+
 public class User {
     private static final String TAG = "User";
 
@@ -8,6 +10,7 @@ public class User {
     private String mPhotoUri;
     private String mEmail;
     private boolean mRequesting;
+    private LatLng mLatLng;
 
     public User() {
     }
@@ -65,5 +68,13 @@ public class User {
 
     public void setRequesting(boolean requesting) {
         mRequesting = requesting;
+    }
+
+    public LatLng getLatLng() {
+        return mLatLng;
+    }
+
+    public void setLatLng(LatLng latLng) {
+        mLatLng = latLng;
     }
 }
