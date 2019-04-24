@@ -1,6 +1,7 @@
 package com.joey.android.mapbox.fragment;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +10,8 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -26,6 +29,10 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -41,20 +48,22 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.joey.android.mapbox.firebase.MapBoxFBSchema;
 import com.joey.android.mapbox.firebase.MapBoxFBSchema.Reference;
 import com.joey.android.mapbox.model.User;
 import com.joey.android.mapbox.model.FriendList;
 import com.joey.android.mapbox.R;
 
 import java.io.File;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserListFragment extends FirebaseFragment {
     private static final String TAG = "UserListFragment";
     private static final String[] LOCATION_PERMISSIONS = new String[] {
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
     };
     private static final String[] STORAGE_PERMISSIONS = new String[] {
             Manifest.permission.READ_EXTERNAL_STORAGE
@@ -67,7 +76,9 @@ public class UserListFragment extends FirebaseFragment {
     private DatabaseReference mUsersReference;
 
     private RecyclerView mFriendListRecyclerView;
+    private FusedLocationProviderClient mFusedLocationProviderClient;
     private FriendListAdapter mAdapter;
+    private Location mLocation;
 
     public static UserListFragment newInstance() {
         return new UserListFragment();
@@ -79,7 +90,9 @@ public class UserListFragment extends FirebaseFragment {
 
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
 
-        mFriendsReference = reference.child(Reference.FRIENDS).child(getUid());
+        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
+
+        mFriendsReference = reference.child(Reference.FRIENDS);
         mUsersReference = reference.child(Reference.USERS);
     }
 
@@ -128,8 +141,16 @@ public class UserListFragment extends FirebaseFragment {
     public void onResume() {
         super.onResume();
 
+        startLocationUpdates();
         updateUI();
         Log.i(TAG, "Fragment has resumed");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        stopLocationUpdates();
     }
 
     @Override
@@ -146,20 +167,28 @@ public class UserListFragment extends FirebaseFragment {
         Log.i(TAG, "Fragment has been attached");
     }
 
-    private void findLocation() {
-//        LocationRequest request = LocationRequest.create();
-//        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-//        request.setNumUpdates(1);
-//        request.setInterval(0);
-        ContextCompat.checkSelfPermission(getActivity(), LOCATION_PERMISSIONS[0]);
-        LocationServices.getFusedLocationProviderClient(getActivity())
-                .getLastLocation()
-                .addOnSuccessListener(getActivity(), new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        Log.i(TAG, "Got a fix: " + location);
-                    }
-                });
+    private LocationRequest createLocationRequest() {
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        return locationRequest;
+    }
+
+    // Location permission check is done in hasLocationPermission()
+    @SuppressWarnings({"MissingPermission"})
+    private void startLocationUpdates() {
+        if (hasLocationPermission()) {
+            mFusedLocationProviderClient.requestLocationUpdates(createLocationRequest(),
+                    locationCallback, null);
+        } else {
+            // Toast ask user to accept location permission
+        }
+    }
+
+    private void stopLocationUpdates() {
+        mFusedLocationProviderClient.removeLocationUpdates(locationCallback);
     }
 
     private boolean hasLocationPermission() {
@@ -191,7 +220,7 @@ public class UserListFragment extends FirebaseFragment {
         private List<User> mUsers = new ArrayList<>();
 
         public FriendListAdapter() {
-            mFriendsReference.addValueEventListener(friendListListener);
+            mFriendsReference.child(getUid()).addValueEventListener(friendListListener);
         }
 
         @NonNull
@@ -213,25 +242,25 @@ public class UserListFragment extends FirebaseFragment {
             return mUsers.size();
         }
 
-        public void setUsers(List<User> users) {
-            mUsers = users;
-        }
-
         ValueEventListener friendListListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                final List<String> uids = new ArrayList<>();
+                final List<AbstractMap.SimpleImmutableEntry<String, Boolean>> uidEntries = new ArrayList<>();
+                mUsers.clear();
 
                 for(DataSnapshot data : dataSnapshot.getChildren()) {
                     String uid = data.getKey();
-                    uids.add(uid);
+                    Boolean isRequesting = (Boolean) data.child(MapBoxFBSchema.FriendsChild.REQUEST_LOCATION).getValue();
+                    uidEntries.add(new AbstractMap.SimpleImmutableEntry<>(uid, isRequesting));
                 }
 
                 mUsersReference.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        for (String uid : uids) {
-                            User user = dataSnapshot.child(uid).getValue(User.class);
+                        for (AbstractMap.SimpleImmutableEntry entry : uidEntries) {
+                            User user = dataSnapshot.child(entry.getKey().toString())
+                                    .getValue(User.class);
+                            user.setRequesting((boolean) entry.getValue());
                             mUsers.add(user);
                         }
 
@@ -260,6 +289,7 @@ public class UserListFragment extends FirebaseFragment {
 
         private TextView mFriendNameTextView;
         private Button mRequestLocationButton;
+        private Button mSendLocationButton;
         private MapView mMapView;
         private ImageView mFriendImageView;
 
@@ -268,10 +298,12 @@ public class UserListFragment extends FirebaseFragment {
 
             mFriendNameTextView = view.findViewById(R.id.viewholder_friend_list_name);
             mRequestLocationButton = view.findViewById(R.id.viewholder_friend_list_get_location);
+            mSendLocationButton = view.findViewById(R.id.viewholder_friend_list_send_location);
             mFriendImageView = view.findViewById(R.id.viewholder_friend_list_image);
             mMapView = view.findViewById(R.id.viewholder_friend_list_map);
 
-            mRequestLocationButton.setOnClickListener(locationOnClickListener);
+            mRequestLocationButton.setOnClickListener(requestLocationOnClickListener);
+            mSendLocationButton.setOnClickListener(sendLocationOnClickListener);
             mFriendImageView.setOnClickListener(friendImageOnClickListener);
 
             if (mMapView != null) {
@@ -286,6 +318,12 @@ public class UserListFragment extends FirebaseFragment {
             mUser = user;
 
             mFriendNameTextView.setText(mUser.getName());
+
+            if (user.isRequesting()) {
+                mSendLocationButton.setBackgroundColor(getResources().getColor(R.color.colorBorder));
+            } else {
+                mSendLocationButton.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+            }
 
             mPhotoFile = FriendList.get(getActivity()).getPhotoFile(mUser);
             if (mPhotoFile.exists()) {
@@ -314,7 +352,7 @@ public class UserListFragment extends FirebaseFragment {
 
         }
 
-        private View.OnClickListener RequestLocationOnClickListener = new View.OnClickListener() {
+        private View.OnClickListener requestLocationOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 //                if (hasLocationPermission()) {
@@ -324,7 +362,27 @@ public class UserListFragment extends FirebaseFragment {
 //                            REQUEST_LOCATION_PERMISSIONS);
 //                }
 
+                mFriendsReference.child(mUser.getUid())
+                        .child(getUid())
+                        .child(MapBoxFBSchema.FriendsChild.REQUEST_LOCATION)
+                        .setValue(true);
+            }
+        };
 
+        private View.OnClickListener sendLocationOnClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mLocation != null) {
+                    mFriendsReference.child(mUser.getUid())
+                            .child(getUid())
+                            .child(MapBoxFBSchema.FriendsChild.LATITUDE)
+                            .setValue(mLocation.getLatitude());
+
+                    mFriendsReference.child(mUser.getUid())
+                            .child(getUid())
+                            .child(MapBoxFBSchema.FriendsChild.LONGITUDE)
+                            .setValue(mLocation.getLongitude());
+                }
             }
         };
 
@@ -374,4 +432,19 @@ public class UserListFragment extends FirebaseFragment {
         };
     }
 
+    LocationCallback locationCallback = new LocationCallback() {
+        @Override
+        public void onLocationResult(LocationResult locationResult) {
+            if (locationResult == null) {
+                return;
+            }
+
+            for (Location location : locationResult.getLocations()) {
+                double longitude = location.getLongitude();
+                double latitude = location.getLatitude();
+
+                mLocation = location;
+            }
+        }
+    };
 }

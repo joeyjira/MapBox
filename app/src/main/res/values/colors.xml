@@ -4,5 +4,9 @@
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
 
+    // MapBox Color Scheme
+    <color name="primaryDark">#e6e6e6</color>
+    <color name="primaryLight">#fbfffe</color>
+
     <color name="colorBorder">#ffae19</color>
 </resources>

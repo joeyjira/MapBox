@@ -26,6 +26,8 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.joey.android.mapbox.R;
 import com.joey.android.mapbox.firebase.FirebaseHelper;
 
+// TODO: Create Activity asking for permissions
+
 public class SignInActivity extends AppCompatActivity {
     private static final String TAG = "SignInActivity";
 

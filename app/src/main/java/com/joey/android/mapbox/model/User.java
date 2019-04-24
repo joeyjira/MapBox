@@ -7,6 +7,7 @@ public class User {
     private String mName;
     private String mPhotoUri;
     private String mEmail;
+    private boolean mRequesting;
 
     public User() {
     }
@@ -56,5 +57,13 @@ public class User {
     public String toString() {
         String user = "UID: " + getUid() + ", Name: " + getName() + ", Email: " + getEmail();
         return user;
+    }
+
+    public boolean isRequesting() {
+        return mRequesting;
+    }
+
+    public void setRequesting(boolean requesting) {
+        mRequesting = requesting;
     }
 }

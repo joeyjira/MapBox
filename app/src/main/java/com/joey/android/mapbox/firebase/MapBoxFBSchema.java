@@ -21,6 +21,9 @@ public class MapBoxFBSchema {
     }
 
     public static final class FriendsChild {
-        public static String REQUEST_LOCATION = "requestLocation";
+        public static String REQUEST_LOCATION = "isRequesting";
+        public static String LATITUDE = "latitude";
+        public static String LONGITUDE = "longitude";
+        public static String LAST_UDPATED = "lastUpdated";
     }
 }
