@@ -58,10 +58,6 @@ public class MainActivity extends AppCompatActivity {
                     fragment = UserListFragment.newInstance();
                     replaceFragment(fragment);
                     return true;
-                case R.id.navigation_inbox:
-                    fragment = InboxFragment.newInstance();
-                    replaceFragment(fragment);
-                    return true;
                 case R.id.navigation_friend_request:
                     fragment = UserRequestFragment.newInstance();
                     replaceFragment(fragment);
