@@ -14,4 +14,7 @@
     <string name="existing_friend">Friended</string>
     <string name="add_friend">Send Request</string>
     <string name="sent_request">Sent!</string>
+
+    // Authentication
+    <string name="sign_out">Sign Out</string>
 </resources>
