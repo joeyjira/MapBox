@@ -55,10 +55,12 @@ import com.joey.android.mapbox.firebase.MapBoxFBSchema.Reference;
 import com.joey.android.mapbox.model.User;
 import com.joey.android.mapbox.model.FriendList;
 import com.joey.android.mapbox.R;
+import com.joey.android.mapbox.model.UserInfo;
 
 import java.io.File;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -135,6 +137,7 @@ public class UserListFragment extends FirebaseFragment {
     public void onStart() {
         super.onStart();
         mFriendsReference.child(getUid()).addValueEventListener(friendListListener);
+        Log.i(TAG, "onSTart has ben called");
     }
 
     @Override
@@ -142,7 +145,7 @@ public class UserListFragment extends FirebaseFragment {
         super.onResume();
 
         startLocationUpdates();
-        updateUI(new ArrayList<User>());
+//        updateUI(new ArrayList<User>());
         Log.i(TAG, "Fragment has resumed");
     }
 
@@ -151,6 +154,7 @@ public class UserListFragment extends FirebaseFragment {
         super.onPause();
 
         stopLocationUpdates();
+        Log.i(TAG, "onPause() has been called");
     }
 
     @Override
@@ -158,6 +162,7 @@ public class UserListFragment extends FirebaseFragment {
         super.onStop();
 
         mFriendsReference.child(getUid()).removeEventListener(friendListListener);
+        Log.i(TAG, "onStop() has been called");
     }
 
     @Override
@@ -220,10 +225,6 @@ public class UserListFragment extends FirebaseFragment {
         }
     }
 
-    private void signOut() {
-        FirebaseAuth.getInstance().signOut();
-    }
-
     private class FriendListAdapter extends RecyclerView.Adapter<FriendHolder> {
         private List<User> mUsers;
 
@@ -262,6 +263,7 @@ public class UserListFragment extends FirebaseFragment {
         private GoogleMap mGoogleMap;
 
         private TextView mFriendNameTextView;
+        private TextView mLastUpdatedTextView;
         private Button mRequestLocationButton;
         private Button mSendLocationButton;
         private MapView mMapView;
@@ -271,6 +273,7 @@ public class UserListFragment extends FirebaseFragment {
             super(view);
 
             mFriendNameTextView = view.findViewById(R.id.viewholder_friend_list_name);
+            mLastUpdatedTextView = view.findViewById(R.id.viewholder_friend_list_time_updated);
             mRequestLocationButton = view.findViewById(R.id.viewholder_friend_list_get_location);
             mSendLocationButton = view.findViewById(R.id.viewholder_friend_list_send_location);
             mFriendImageView = view.findViewById(R.id.viewholder_friend_list_image);
@@ -326,18 +329,23 @@ public class UserListFragment extends FirebaseFragment {
 
         @Override
         public void onMapReady(GoogleMap googleMap) {
+            mLastUpdatedTextView.bringToFront();
             LatLng userLatLng = mUser.getLatLng();
             MapsInitializer.initialize(UserListFragment.this.getActivity());
             mGoogleMap = googleMap;
+            setMapLocation(userLatLng);
             mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-            if (userLatLng != null) {
-                setMapLocation(userLatLng);
-            }
         }
 
         private void setMapLocation(LatLng userLatLng) {
-            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 13f));
-            mGoogleMap.addMarker(new MarkerOptions().position(userLatLng));
+            if (userLatLng != null) {
+                mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 13f));
+                mGoogleMap.addMarker(new MarkerOptions().position(userLatLng));
+            } else {
+//                mGoogleMap.moveCamera(CameraUpdateFactory
+//                        .newLatLngZoom(new LatLng(mLocation
+//                                .getLatitude(), mLocation.getLongitude()), 13f));
+            }
         }
 
         private View.OnClickListener requestLocationOnClickListener = new View.OnClickListener() {
@@ -357,6 +365,7 @@ public class UserListFragment extends FirebaseFragment {
                         .child(getUid());
                 DatabaseReference userRef = mFriendsReference.child(getUid())
                         .child(mUser.getUid());
+                long currentTime = new Date().getTime();
 
                 if (mLocation != null) {
                             friendRef.child(FriendsChild.LATITUDE)
@@ -364,6 +373,9 @@ public class UserListFragment extends FirebaseFragment {
 
                             friendRef.child(FriendsChild.LONGITUDE)
                                     .setValue(mLocation.getLongitude());
+
+                            friendRef.child(FriendsChild.LAST_UDPATED)
+                                    .setValue(currentTime);
 
                             userRef.child(FriendsChild.REQUEST_LOCATION)
                                     .setValue(false);
@@ -420,35 +432,27 @@ public class UserListFragment extends FirebaseFragment {
     ValueEventListener friendListListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-            final List<AbstractMap.SimpleImmutableEntry<String, Boolean>> uidEntries = new ArrayList<>();
-            final Map<String, LatLng> locationMap = new HashMap<>();
+            final List<UserInfo> usersInfo = new ArrayList<>();
 
-            for(DataSnapshot data : dataSnapshot.getChildren()) {
-                String uid = data.getKey();
-                Double latitude = (Double) data.child(FriendsChild.LATITUDE).getValue();
-                Double longitude = (Double) data.child(FriendsChild.LONGITUDE).getValue();
-                if (latitude != null && longitude != null) {
-                    locationMap.put(uid,
-                            new LatLng(latitude, longitude));
-                }
-                Boolean isRequesting = (Boolean) data.child(FriendsChild.REQUEST_LOCATION).getValue();
-                uidEntries.add(new AbstractMap.SimpleImmutableEntry<>(uid, isRequesting));
+            for (DataSnapshot data : dataSnapshot.getChildren()) {
+                UserInfo info = data.getValue(UserInfo.class);
+                Log.i(TAG, "INFORMATION:" + info.toString());
+                info.setUid(data.getKey());
+                usersInfo.add(info);
             }
 
             mUsersReference.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     List<User> users = new ArrayList<>();
-                    for (AbstractMap.SimpleImmutableEntry entry : uidEntries) {
-                        String uid = entry.getKey().toString();
+
+                    for (UserInfo info : usersInfo) {
+                        String uid = info.getUid();
+                        Log.i(TAG, "UID:" + uid);
                         User user = dataSnapshot.child(uid)
                                 .getValue(User.class);
-                        user.setRequesting((boolean) entry.getValue());
 
-                        if (locationMap.containsKey(uid)) {
-                            user.setLatLng(locationMap.get(uid));
-                        }
-
+                        user.additionalInfo(info);
                         users.add(user);
                     }
 
