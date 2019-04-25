@@ -2,6 +2,8 @@ package com.joey.android.mapbox.model;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.Date;
+
 public class User {
     private static final String TAG = "User";
 
@@ -11,6 +13,7 @@ public class User {
     private String mEmail;
     private boolean mRequesting;
     private LatLng mLatLng;
+    private Date mLastUpdated;
 
     public User() {
     }
@@ -20,10 +23,24 @@ public class User {
         mName = name;
     }
 
+    public void additionalInfo(UserInfo info) {
+        if (info.getIsRequesting() != null) {
+            setRequesting(info.getIsRequesting());
+        }
+
+        if (info.getLatitude() != null) {
+            setLatLng(new LatLng(info.getLatitude(), info.getLongitude()));
+        }
+
+        if (info.getLastUpdated() != null) {
+            setLastUpdated(new Date(info.getLastUpdated()));
+
+        }
+    }
+
     public String getPhotoFilename() {
         return "IMG_" + getUid() + ".jpg";
     }
-
 
     public String getUid() {
         return mUid;
@@ -76,5 +93,13 @@ public class User {
 
     public void setLatLng(LatLng latLng) {
         mLatLng = latLng;
+    }
+
+    public Date getLastUpdated() {
+        return mLastUpdated;
+    }
+
+    public void setLastUpdated(Date lastUpdated) {
+        mLastUpdated = lastUpdated;
     }
 }
