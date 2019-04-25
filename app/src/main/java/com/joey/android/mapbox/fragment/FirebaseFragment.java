@@ -4,7 +4,7 @@ import android.support.v4.app.Fragment;
 
 import com.google.firebase.auth.FirebaseAuth;
 
-public class FirebaseFragment extends Fragment {
+public abstract class FirebaseFragment extends Fragment {
     public String getUid() {
         return FirebaseAuth.getInstance().getCurrentUser().getUid();
     }
