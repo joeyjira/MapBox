@@ -25,6 +25,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.joey.android.mapbox.fragment.InboxFragment;
 import com.joey.android.mapbox.R;
 import com.joey.android.mapbox.fragment.UserListFragment;
+import com.joey.android.mapbox.fragment.UserProfileFragment;
 import com.joey.android.mapbox.fragment.UserRequestFragment;
 
 public class MainActivity extends AppCompatActivity {
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
                     replaceFragment(fragment);
                     return true;
                 case R.id.navigation_settings:
-                    fragment = UserRequestFragment.newInstance();
+                    fragment = UserProfileFragment.newInstance();
                     replaceFragment(fragment);
                     return true;
             }
@@ -74,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTheme(R.style.AppTheme);
         setContentView(R.layout.activity_main);
 
         mUser = getIntent().getParcelableExtra(EXTRA_AUTHENTICATED_USER);
