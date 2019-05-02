@@ -21,6 +21,7 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support:support-compat:28.0.0'
     // Added following dependencies to suppress warning of mixed versions
     implementation 'com.android.support:customtabs:28.0.0'
     implementation 'com.android.support:support-vector-drawable:28.0.0'
