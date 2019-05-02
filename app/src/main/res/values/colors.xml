@@ -8,5 +8,8 @@
     <color name="primaryDark">#e6e6e6</color>
     <color name="primaryLight">#fbfffe</color>
 
-    <color name="colorBorder">#ffae19</color>
+    <color name="colorBorder">#000000</color>
+
+    // Button Color
+    <color name="requestButton">#54c6eb</color>
 </resources>
