@@ -101,7 +101,7 @@ public class UserListFragment extends FirebaseFragment {
         mFriendListRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         mEmptyListTextView = view.findViewById(R.id.fragment_recycler_view_empty_list);
-        mEmptyListTextView.setText("There are currently no friend requests");
+        mEmptyListTextView.setText("Try adding someone!");
 
         updateUI();
 
@@ -231,6 +231,8 @@ public class UserListFragment extends FirebaseFragment {
             mFriendsReference = reference.child(Reference.FRIENDS);
             mUsersReference = reference.child(Reference.USERS);
 
+            mEmptyListTextView.setVisibility(View.VISIBLE);
+
             ChildEventListener childEventListener = new ChildEventListener() {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
@@ -251,7 +253,7 @@ public class UserListFragment extends FirebaseFragment {
                             // Update RecyclerView
                             mUsers.add(user);
                             mUsersId.add(uid);
-                            new DownloadProfileImageTask().execute(user);
+                            mEmptyListTextView.setVisibility(View.GONE);
                             notifyItemInserted(mUsers.size() - 1);
                         }
 
@@ -265,8 +267,8 @@ public class UserListFragment extends FirebaseFragment {
                 @Override
                 public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                     Log.i(TAG, "onChildChanged:" + dataSnapshot);
-                    String uid = dataSnapshot.getKey();
 
+                    String uid = dataSnapshot.getKey();
                     UserInfo userInfo = dataSnapshot.getValue(UserInfo.class);
                     userInfo.setUid(uid);
 
@@ -285,6 +287,19 @@ public class UserListFragment extends FirebaseFragment {
                 @Override
                 public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
                     Log.i(TAG, "onChildRemoved:" + dataSnapshot);
+
+                    String uid = dataSnapshot.getKey();
+                    int userIndex = mUsersId.indexOf(uid);
+                    if (userIndex > -1) {
+                        mUsers.remove(userIndex);
+                        mUsersId.remove(userIndex);
+
+                        // Update RecyclerView
+                        notifyItemRemoved(userIndex);
+                        if (mUsers.isEmpty()) {
+                            mEmptyListTextView.setVisibility(View.VISIBLE);
+                        }
+                    }
                 }
 
                 @Override
@@ -373,7 +388,7 @@ public class UserListFragment extends FirebaseFragment {
                                 urlSpec);
                     }
 
-                    int bytesRead = 0;
+                    int bytesRead;
                     byte[] buffer = new byte[1024];
 
                     while ((bytesRead = in.read(buffer)) > 0) {
@@ -425,6 +440,8 @@ public class UserListFragment extends FirebaseFragment {
 
             public void bind(User user) {
                 mUser = user;
+
+                new DownloadProfileImageTask().execute(user);
 
                 LatLng latLng = mUser.getLatLng();
                 Date currentTime = mUser.getLastUpdated();
