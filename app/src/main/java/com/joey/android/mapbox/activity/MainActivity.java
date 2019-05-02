@@ -40,6 +40,11 @@ public class MainActivity extends AppCompatActivity {
     private GoogleApiClient mClient;
     private FirebaseUser mUser;
     private FirebaseDatabase mDatabase;
+    private FragmentManager mFragmentManager;
+    private Fragment mUserListFragment;
+    private Fragment mUserRequestFragment;
+    private Fragment mUserProfileFragment;
+    private Fragment mActiveFragment;
 
     public static Intent newIntent(Context packageContext, FirebaseUser user) {
         Intent intent = new Intent(packageContext, MainActivity.class);
@@ -52,20 +57,27 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            Fragment fragment;
-
             switch (item.getItemId()) {
                 case R.id.navigation_friend_box:
-                    fragment = UserListFragment.newInstance();
-                    replaceFragment(fragment);
+                    mFragmentManager.beginTransaction()
+                            .hide(mActiveFragment)
+                            .show(mUserListFragment)
+                            .commit();
+                    mActiveFragment = mUserListFragment;
                     return true;
                 case R.id.navigation_friend_request:
-                    fragment = UserRequestFragment.newInstance();
-                    replaceFragment(fragment);
+                    mFragmentManager.beginTransaction()
+                            .hide(mActiveFragment)
+                            .show(mUserRequestFragment)
+                            .commit();
+                    mActiveFragment = mUserRequestFragment;
                     return true;
                 case R.id.navigation_settings:
-                    fragment = UserProfileFragment.newInstance();
-                    replaceFragment(fragment);
+                    mFragmentManager.beginTransaction()
+                            .hide(mActiveFragment)
+                            .show(mUserProfileFragment)
+                            .commit();
+                    mActiveFragment = mUserProfileFragment;
                     return true;
             }
             return false;
@@ -79,20 +91,31 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mUser = getIntent().getParcelableExtra(EXTRA_AUTHENTICATED_USER);
+        mUserListFragment = UserListFragment.newInstance();
+        mUserRequestFragment = UserRequestFragment.newInstance();
+        mUserProfileFragment = UserProfileFragment.newInstance();
+        mActiveFragment = mUserListFragment;
 
         mTextMessage = (TextView) findViewById(R.id.message);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-        FragmentManager fm = getSupportFragmentManager();
-        Fragment fragment = fm.findFragmentById(R.id.main_container);
+        mFragmentManager = getSupportFragmentManager();
 
-        if (fragment == null) {
-            fragment = UserListFragment.newInstance();
-            fm.beginTransaction()
-                    .add(R.id.main_container, fragment)
-                    .commit();
-        }
+//        if (fragment == null) {
+//            fragment = UserListFragment.newInstance();
+//            fm.beginTransaction()
+//                    .add(R.id.main_container, fragment)
+//                    .commit();
+//        }
+
+        mFragmentManager.beginTransaction()
+                .add(R.id.main_container, mActiveFragment)
+                .add(R.id.main_container, mUserRequestFragment)
+                .add(R.id.main_container, mUserProfileFragment)
+                .hide(mUserRequestFragment)
+                .hide(mUserProfileFragment)
+                .commit();
 
         mClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
