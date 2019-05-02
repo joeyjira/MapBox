@@ -25,6 +25,8 @@ import com.joey.android.mapbox.firebase.MapBoxFBSchema;
 import com.joey.android.mapbox.firebase.MapBoxFBSchema.Reference;
 import com.joey.android.mapbox.model.User;
 
+import org.w3c.dom.Text;
+
 import java.sql.Ref;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +37,7 @@ public class UserRequestFragment extends FirebaseFragment {
     private static final String TAG = "UserRequestFragment";
 
     private RecyclerView mUserRequestRecyclerView;
+    private TextView mEmptyListTextView;
     private UserRequestAdapter mAdapter;
     private DatabaseReference mReference;
     private List<User> mRequests;
@@ -60,6 +63,9 @@ public class UserRequestFragment extends FirebaseFragment {
 
         mUserRequestRecyclerView = view.findViewById(R.id.recycler_view_map_box);
         mUserRequestRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        mEmptyListTextView = view.findViewById(R.id.fragment_recycler_view_empty_list);
+        mEmptyListTextView.setText("There are currently no friend requests");
 
         updateUI();
 
@@ -91,6 +97,12 @@ public class UserRequestFragment extends FirebaseFragment {
         } else {
             mAdapter.setUsers(mRequests);
             mAdapter.notifyDataSetChanged();
+        }
+
+        if (mRequests.size() == 0 || mRequests == null) {
+            mEmptyListTextView.setVisibility(View.VISIBLE);
+        } else {
+            mEmptyListTextView.setVisibility(View.GONE);
         }
     }
 
@@ -210,15 +222,6 @@ public class UserRequestFragment extends FirebaseFragment {
         @Override
         public void onCancelled(@NonNull DatabaseError databaseError) {
 
-        }
-    };
-
-    private View.OnClickListener signOutOnClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            FirebaseAuth.getInstance().signOut();
-            Intent intent = SignInActivity.newIntent(getActivity());
-            startActivity(intent);
         }
     };
 }
