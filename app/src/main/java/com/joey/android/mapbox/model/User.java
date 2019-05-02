@@ -1,5 +1,7 @@
 package com.joey.android.mapbox.model;
 
+import android.util.Log;
+
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.Date;
@@ -28,12 +30,13 @@ public class User {
             setRequesting(info.getIsRequesting());
         }
 
-        if (info.getLatitude() != null) {
+        if (info.getLatitude() != null && info.getLongitude() != null) {
             setLatLng(new LatLng(info.getLatitude(), info.getLongitude()));
         }
 
         if (info.getLastUpdated() != null) {
-            setLastUpdated(new Date(info.getLastUpdated()));
+            // Revert the inverted timestamp back to correct date
+            setLastUpdated(new Date(-1 * (info.getLastUpdated())));
 
         }
     }
