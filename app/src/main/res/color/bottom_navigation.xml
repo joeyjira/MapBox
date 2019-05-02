@@ -5,7 +5,8 @@
         android:color="#ffff0000"/> <!-- pressed -->
     <item
         android:state_selected="true"
-        android:color="#000000"/> <!-- focused -->
+        android:color="#000000" /> <!-- focused -->
+
     <item android:color="@android:color/darker_gray"/> <!-- default -->
 
 </selector>
