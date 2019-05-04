@@ -4,50 +4,65 @@
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent" 
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    card_view:cardCornerRadius="6dp"
+    android:layout_margin="4dp"
+    card_view:cardCornerRadius="2dp"
     android:elevation="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:gravity="center"
         android:weightSum="1">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="0.65"
-            android:orientation="vertical">
+            android:layout_weight="0.25"
+            android:orientation="vertical"
+            android:gravity="center">
 
             <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/viewholder_friend_request_image"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:src="@drawable/ic_profile_pic" />
+                android:layout_margin="8dp"
+                card_view:civ_border_color="@android:color/black"
+                card_view:civ_border_width="2dp" />
 
             <TextView
                 android:id="@+id/viewholder_friend_request_name"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="0.35"
-            android:orientation="vertical">
+            android:layout_weight="0.75"
+            android:orientation="horizontal"
+            android:gravity="center">
 
             <Button
                 android:id="@+id/viewholder_friend_request_accept"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Accept" />
+                android:text="@string/accept_button"
+                android:background="@drawable/button_accept_selector"
+                android:layout_margin="4dp"/>
 
             <Button
                 android:id="@+id/viewholder_friend_request_ignore"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ignore" />
+                android:text="@string/reject_button"
+                android:background="@drawable/button_reject_selector"
+                android:layout_margin="4dp"/>
         </LinearLayout>
     </LinearLayout>
 </android.support.v7.widget.CardView>

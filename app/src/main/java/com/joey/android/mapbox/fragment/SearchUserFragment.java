@@ -19,8 +19,8 @@ import com.joey.android.mapbox.R;
 import com.joey.android.mapbox.firebase.MapBoxFBSchema.Reference;
 import com.joey.android.mapbox.model.User;
 
-public class AddUserFragment extends FirebaseFragment {
-    private static final String TAG = "AddUserFragment";
+public class SearchUserFragment extends FirebaseFragment {
+    private static final String TAG = "SearchUserFragment";
 
     private DatabaseReference mReference;
     private User mUser;
@@ -31,8 +31,8 @@ public class AddUserFragment extends FirebaseFragment {
     private TextView mUserEmail;
     private Button mResponseButton;
 
-    public static AddUserFragment newInstance() {
-        return new AddUserFragment();
+    public static SearchUserFragment newInstance() {
+        return new SearchUserFragment();
     }
 
     @Override

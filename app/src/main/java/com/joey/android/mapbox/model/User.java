@@ -15,7 +15,7 @@ public class User {
     private String mEmail;
     private boolean mRequesting;
     private LatLng mLatLng;
-    private Date mLastUpdated;
+    private long mLastUpdated;
 
     public User() {
     }
@@ -36,8 +36,7 @@ public class User {
 
         if (info.getLastUpdated() != null) {
             // Revert the inverted timestamp back to correct date
-            setLastUpdated(new Date(-1 * (info.getLastUpdated())));
-
+            mLastUpdated = -1 * info.getLastUpdated();
         }
     }
 
@@ -98,11 +97,11 @@ public class User {
         mLatLng = latLng;
     }
 
-    public Date getLastUpdated() {
+    public long getLastUpdated() {
         return mLastUpdated;
     }
 
-    public void setLastUpdated(Date lastUpdated) {
+    public void setLastUpdated(long lastUpdated) {
         mLastUpdated = lastUpdated;
     }
 }

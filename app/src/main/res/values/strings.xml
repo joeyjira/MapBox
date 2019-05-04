@@ -1,8 +1,9 @@
 <resources>
     <string name="app_name">MapBox</string>
-    <string name="title_friend_box">Friend Box</string>
+    <string name="friend">Friend</string>
     <string name="title_inbox">Inbox</string>
-    <string name="title_requests">Requests</string>
+    <string name="requests">Requests</string>
+    <string name="search">Search</string>
 
     // FriendList String
     <string name="request_location">Request Location</string>
@@ -14,6 +15,10 @@
     <string name="existing_friend">Friended</string>
     <string name="add_friend">Send Request</string>
     <string name="sent_request">Sent!</string>
+
+    // UserRequestFragment
+    <string name="accept_button">Accept</string>
+    <string name="reject_button">Reject</string>
 
     // Authentication
     <string name="sign_out">Sign Out</string>

@@ -24,6 +24,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
 import com.joey.android.mapbox.fragment.InboxFragment;
 import com.joey.android.mapbox.R;
+import com.joey.android.mapbox.fragment.SearchUserFragment;
 import com.joey.android.mapbox.fragment.UserListFragment;
 import com.joey.android.mapbox.fragment.UserProfileFragment;
 import com.joey.android.mapbox.fragment.UserRequestFragment;
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private FragmentManager mFragmentManager;
     private Fragment mUserListFragment;
     private Fragment mUserRequestFragment;
+    private Fragment mSearchUserFragment;
     private Fragment mUserProfileFragment;
     private Fragment mActiveFragment;
 
@@ -72,6 +74,13 @@ public class MainActivity extends AppCompatActivity {
                             .commit();
                     mActiveFragment = mUserRequestFragment;
                     return true;
+                case R.id.navigation_search:
+                    mFragmentManager.beginTransaction()
+                            .hide(mActiveFragment)
+                            .show(mSearchUserFragment)
+                            .commit();
+                    mActiveFragment = mSearchUserFragment;
+                    return true;
                 case R.id.navigation_settings:
                     mFragmentManager.beginTransaction()
                             .hide(mActiveFragment)
@@ -91,29 +100,27 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mUser = getIntent().getParcelableExtra(EXTRA_AUTHENTICATED_USER);
+
+        // Create required fragments
         mUserListFragment = UserListFragment.newInstance();
         mUserRequestFragment = UserRequestFragment.newInstance();
+        mSearchUserFragment = SearchUserFragment.newInstance();
         mUserProfileFragment = UserProfileFragment.newInstance();
         mActiveFragment = mUserListFragment;
 
-        mTextMessage = (TextView) findViewById(R.id.message);
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        mTextMessage = findViewById(R.id.message);
+        BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
         mFragmentManager = getSupportFragmentManager();
 
-//        if (fragment == null) {
-//            fragment = UserListFragment.newInstance();
-//            fm.beginTransaction()
-//                    .add(R.id.main_container, fragment)
-//                    .commit();
-//        }
-
         mFragmentManager.beginTransaction()
-                .add(R.id.main_container, mActiveFragment)
+                .add(R.id.main_container, mUserListFragment)
                 .add(R.id.main_container, mUserRequestFragment)
+                .add(R.id.main_container, mSearchUserFragment)
                 .add(R.id.main_container, mUserProfileFragment)
                 .hide(mUserRequestFragment)
+                .hide(mSearchUserFragment)
                 .hide(mUserProfileFragment)
                 .commit();
 
@@ -185,12 +192,5 @@ public class MainActivity extends AppCompatActivity {
 
             errorDialog.show();
         }
-    }
-
-    private void replaceFragment(Fragment fragment) {
-        FragmentManager fm = getSupportFragmentManager();
-        fm.beginTransaction()
-                .replace(R.id.main_container, fragment)
-                .commit();
     }
 }

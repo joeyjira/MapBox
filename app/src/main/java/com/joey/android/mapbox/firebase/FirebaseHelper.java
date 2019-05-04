@@ -37,7 +37,6 @@ public class FirebaseHelper {
     }
 
     public void saveUser(FirebaseUser user, boolean isNewUser) {
-        if (isNewUser) {
             String userUid = user.getUid();
             DatabaseReference usersReference = mReference.child("users").child(userUid);
             usersReference.child("name").setValue(user.getDisplayName());
@@ -47,7 +46,6 @@ public class FirebaseHelper {
             String email = encodeEmail(user.getEmail());
             DatabaseReference emailsReference = mReference.child("emails").child(email);
             emailsReference.setValue(user.getUid());
-        }
     }
 
     private String encodeEmail(String email) {

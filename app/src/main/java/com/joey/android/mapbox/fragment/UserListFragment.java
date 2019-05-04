@@ -17,6 +17,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -58,6 +59,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -224,7 +226,7 @@ public class UserListFragment extends FirebaseFragment {
 
         private List<User> mUsers = new ArrayList<>();
         private List<String> mUsersId = new ArrayList<>();
-        private Map<User, Bitmap> mProfileImageMap;
+        private Map<User, Bitmap> mProfileImageMap = new HashMap<>();
 
         public FriendListAdapter() {
             DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
@@ -247,6 +249,9 @@ public class UserListFragment extends FirebaseFragment {
                             String uid = userInfo.getUid();
                             User user = dataSnapshot.child(uid)
                                     .getValue(User.class);
+
+                            // Download Profile Image from Google
+                            new DownloadProfileImageTask().execute(new User[] { user });
 
                             user.additionalInfo(userInfo);
 
@@ -271,11 +276,12 @@ public class UserListFragment extends FirebaseFragment {
                     String uid = dataSnapshot.getKey();
                     UserInfo userInfo = dataSnapshot.getValue(UserInfo.class);
                     userInfo.setUid(uid);
-
                     int userIndex = mUsersId.indexOf(uid);
+
                     if (userIndex > -1) {
                         // Replace with new user data
-                        mUsers.get(userIndex).additionalInfo(userInfo);
+                        User user = mUsers.get(userIndex);
+                        user.additionalInfo(userInfo);
 
                         // Update RecyclerView
                         notifyItemChanged(userIndex);
@@ -348,30 +354,32 @@ public class UserListFragment extends FirebaseFragment {
             }
         }
 
-        public class DownloadProfileImageTask extends AsyncTask<User, Void, Map<User, Bitmap>> {
-            @Override
-            protected Map<User, Bitmap> doInBackground(User... users) {
-                Log.i(TAG, "Async Task called to download image");
-                User user = users[0];
-                Map<User, Bitmap> map = new HashMap<>();
+        public class DownloadProfileImageTask extends AsyncTask<User, Void, Bitmap> {
+            User mUser;
 
-                String photoUri = user.getPhotoUri();
-                Bitmap photoBitmap;
+            @Override
+            protected Bitmap doInBackground(User... users) {
+                Log.i(TAG, "Async Task called to download image");
+                mUser = users[0];
+
+                String photoUri = mUser.getPhotoUri();
+                Bitmap photoBitmap = null;
 
                 try {
                     byte[] imageBytes = getUrlBytes(photoUri);
                     photoBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-                    map.put(user, photoBitmap);
+                    Log.i(TAG, "PHOTO" + photoUri);
                 } catch (IOException ioe) {
                     Log.e(TAG, "Failed to fetch bitmap from url");
                 }
 
-                return map;
+                return photoBitmap;
             }
 
             @Override
-            protected void onPostExecute(Map<User, Bitmap> map) {
-                mProfileImageMap = map;
+            protected void onPostExecute(Bitmap bitmap) {
+                Log.i(TAG, "User:" + mUser + ", bitmap:" + bitmap);
+                mProfileImageMap.put(mUser, bitmap);
             }
 
             private byte[] getUrlBytes(String urlSpec) throws IOException {
@@ -426,6 +434,9 @@ public class UserListFragment extends FirebaseFragment {
                 mFriendImageView = view.findViewById(R.id.viewholder_friend_list_image);
                 mMapView = view.findViewById(R.id.viewholder_friend_list_map);
 
+                // Scale button when pressed
+                mSendLocationButton.setOnTouchListener(sendLocationListener);
+
                 mRequestLocationButton.setOnClickListener(requestLocationOnClickListener);
                 mSendLocationButton.setOnClickListener(sendLocationOnClickListener);
 //                mFriendImageView.setOnClickListener(friendImageOnClickListener);
@@ -441,10 +452,10 @@ public class UserListFragment extends FirebaseFragment {
             public void bind(User user) {
                 mUser = user;
 
-                new DownloadProfileImageTask().execute(user);
-
                 LatLng latLng = mUser.getLatLng();
-                Date currentTime = mUser.getLastUpdated();
+                long currentTime = mUser.getLastUpdated();
+                long timeElapsed = new Date().getTime() - currentTime;
+                String timeTag = String.valueOf(TimeUnit.MILLISECONDS.toMinutes(timeElapsed));
 
                 mFriendNameTextView.setText(mUser.getName());
 
@@ -456,8 +467,9 @@ public class UserListFragment extends FirebaseFragment {
                     mFriendImageView.setImageBitmap(image);
                 }
 
-                if (currentTime != null) {
-                    mLastUpdatedTextView.setText(currentTime.toString());
+                if (currentTime != 0L) {
+//                    mLastUpdatedTextView.setText();
+                    mRequestLocationButton.setText("REQUEST LOCATION\n" + "Updated " + timeTag + " minutes ago");
                 }
 
                 if (mLocation == null) {
@@ -518,6 +530,30 @@ public class UserListFragment extends FirebaseFragment {
                             .child(getUid())
                             .child(FriendsChild.REQUEST_LOCATION)
                             .setValue(true);
+                }
+            };
+
+            View.OnTouchListener sendLocationListener = new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    if (event.getAction() == MotionEvent.ACTION_DOWN)
+                    {
+                        float x = (float) 1.25;
+                        float y = (float) 1.25;
+
+                        mSendLocationButton.setScaleX(x);
+                        mSendLocationButton.setScaleY(y);
+                    }
+
+                    else if(event.getAction() == MotionEvent.ACTION_UP)
+                    {
+                        float x = 1;
+                        float y = 1;
+
+                        mSendLocationButton.setScaleX(x);
+                        mSendLocationButton.setScaleY(y);
+                    }
+                    return false;
                 }
             };
 
