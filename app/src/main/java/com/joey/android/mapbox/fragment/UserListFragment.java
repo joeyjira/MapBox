@@ -545,7 +545,8 @@ public class UserListFragment extends FirebaseFragment {
                         mSendLocationButton.setScaleY(y);
                     }
 
-                    else if(event.getAction() == MotionEvent.ACTION_UP)
+                    else if(event.getAction() == MotionEvent.ACTION_UP ||
+                            event.getAction() == MotionEvent.ACTION_CANCEL)
                     {
                         float x = 1;
                         float y = 1;
