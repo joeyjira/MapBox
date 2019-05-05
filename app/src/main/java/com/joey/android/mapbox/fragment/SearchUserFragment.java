@@ -3,11 +3,12 @@ package com.joey.android.mapbox.fragment;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.firebase.database.DataSnapshot;
@@ -25,7 +26,8 @@ public class SearchUserFragment extends FirebaseFragment {
     private DatabaseReference mReference;
     private User mUser;
 
-    private EditText mEmailEditText;
+    private SearchView mEmailSearchView;
+    private LinearLayout mUserProfileLayout;
     private Button mSearchUserButton;
     private TextView mUserNameText;
     private TextView mUserEmail;
@@ -46,9 +48,11 @@ public class SearchUserFragment extends FirebaseFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_add_friend, container, false);
+        View view = inflater.inflate(R.layout.fragment_search_user, container, false);
 
-        mEmailEditText = view.findViewById(R.id.edit_email);
+        mEmailSearchView = view.findViewById(R.id.edit_email);
+
+        mUserProfileLayout = view.findViewById(R.id.layout_user_profile);
 
         mSearchUserButton = view.findViewById(R.id.fragment_add_friend_get_user);
         mSearchUserButton.setOnClickListener(getUserOnClickListener);
@@ -67,6 +71,7 @@ public class SearchUserFragment extends FirebaseFragment {
                 .child(encodeEmail(email))
                 .addListenerForSingleValueEvent(getUserListener);
 
+        mUserProfileLayout.setVisibility(View.VISIBLE);
     }
 
     private void addUser() {
@@ -83,7 +88,8 @@ public class SearchUserFragment extends FirebaseFragment {
     View.OnClickListener getUserOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            String email = mEmailEditText.getText().toString().trim().toLowerCase();
+            String email = mEmailSearchView.getQuery().toString().trim().toLowerCase();
+
             searchUser(email);
         }
     };
