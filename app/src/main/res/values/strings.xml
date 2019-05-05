@@ -1,9 +1,10 @@
 <resources>
     <string name="app_name">MapBox</string>
-    <string name="friend">Friend</string>
+    <string name="friends">Friends</string>
     <string name="title_inbox">Inbox</string>
-    <string name="requests">Requests</string>
     <string name="search">Search</string>
+    <string name="requests">Requests</string>
+    <string name="settings">Settings</string>
 
     // FriendList String
     <string name="request_location">Request Location</string>
