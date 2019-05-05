@@ -98,7 +98,9 @@ public class SignInActivity extends AppCompatActivity {
         if (user != null) {
             Log.i(TAG, "Email:" + user.getEmail());
             Intent intent = MainActivity.newIntent(SignInActivity.this, user);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
+            finish();
         }
     }
 

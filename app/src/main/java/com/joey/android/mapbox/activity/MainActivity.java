@@ -193,4 +193,9 @@ public class MainActivity extends AppCompatActivity {
             errorDialog.show();
         }
     }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+    }
 }
