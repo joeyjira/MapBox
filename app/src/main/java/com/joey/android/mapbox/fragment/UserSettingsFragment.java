@@ -1,5 +1,6 @@
 package com.joey.android.mapbox.fragment;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -9,17 +10,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.joey.android.mapbox.R;
 import com.joey.android.mapbox.activity.SignInActivity;
 
-public class UserProfileFragment extends FirebaseFragment {
-    private static final String TAG = "UserProfileFragment";
+public class UserSettingsFragment extends FirebaseFragment {
+    private static final String TAG = "UserSettingsFragment";
+
+    private GoogleSignOut mCallback;
 
     private Button mSignOutButton;
 
-    public static UserProfileFragment newInstance() {
-        return new UserProfileFragment();
+    public static UserSettingsFragment newInstance() {
+        return new UserSettingsFragment();
     }
 
     View.OnClickListener signOutListener = new View.OnClickListener() {
@@ -34,6 +38,8 @@ public class UserProfileFragment extends FirebaseFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
     }
 
     @Nullable
@@ -47,7 +53,27 @@ public class UserProfileFragment extends FirebaseFragment {
         return view;
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        mCallback = (GoogleSignOut) context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+
+        mCallback = null;
+    }
+
     private void signOut() {
         FirebaseAuth.getInstance().signOut();
+        mCallback.googleSignOut();
+    }
+
+    // Hosting Activity must implement this interface
+    public interface GoogleSignOut {
+        void googleSignOut();
     }
 }

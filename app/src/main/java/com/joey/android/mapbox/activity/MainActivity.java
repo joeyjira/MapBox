@@ -11,25 +11,28 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
-import com.joey.android.mapbox.fragment.InboxFragment;
 import com.joey.android.mapbox.R;
 import com.joey.android.mapbox.fragment.SearchUserFragment;
 import com.joey.android.mapbox.fragment.UserListFragment;
-import com.joey.android.mapbox.fragment.UserProfileFragment;
+import com.joey.android.mapbox.fragment.UserSettingsFragment;
 import com.joey.android.mapbox.fragment.UserRequestFragment;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+        implements UserSettingsFragment.GoogleSignOut {
     private static final String TAG = "MainActivity";
 
     private static final String EXTRA_AUTHENTICATED_USER = "authenticatedUser";
@@ -41,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private GoogleApiClient mClient;
     private FirebaseUser mUser;
     private FirebaseDatabase mDatabase;
+    private GoogleSignInClient mGoogleSignInClient;
     private FragmentManager mFragmentManager;
     private Fragment mUserListFragment;
     private Fragment mUserRequestFragment;
@@ -65,27 +69,31 @@ public class MainActivity extends AppCompatActivity {
                             .hide(mActiveFragment)
                             .show(mUserListFragment)
                             .commit();
+                    getSupportActionBar().setTitle(R.string.friends);
                     mActiveFragment = mUserListFragment;
-                    return true;
-                case R.id.navigation_friend_request:
-                    mFragmentManager.beginTransaction()
-                            .hide(mActiveFragment)
-                            .show(mUserRequestFragment)
-                            .commit();
-                    mActiveFragment = mUserRequestFragment;
                     return true;
                 case R.id.navigation_search:
                     mFragmentManager.beginTransaction()
                             .hide(mActiveFragment)
                             .show(mSearchUserFragment)
                             .commit();
+                    getSupportActionBar().setTitle(R.string.search);
                     mActiveFragment = mSearchUserFragment;
+                    return true;
+                case R.id.navigation_friend_request:
+                    mFragmentManager.beginTransaction()
+                            .hide(mActiveFragment)
+                            .show(mUserRequestFragment)
+                            .commit();
+                    getSupportActionBar().setTitle(R.string.requests);
+                    mActiveFragment = mUserRequestFragment;
                     return true;
                 case R.id.navigation_settings:
                     mFragmentManager.beginTransaction()
                             .hide(mActiveFragment)
                             .show(mUserProfileFragment)
                             .commit();
+                    getSupportActionBar().setTitle(R.string.settings);
                     mActiveFragment = mUserProfileFragment;
                     return true;
             }
@@ -101,16 +109,25 @@ public class MainActivity extends AppCompatActivity {
 
         mUser = getIntent().getParcelableExtra(EXTRA_AUTHENTICATED_USER);
 
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.firebase_token))
+                .requestEmail()
+                .build();
+
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
         // Create required fragments
         mUserListFragment = UserListFragment.newInstance();
         mUserRequestFragment = UserRequestFragment.newInstance();
         mSearchUserFragment = SearchUserFragment.newInstance();
-        mUserProfileFragment = UserProfileFragment.newInstance();
+        mUserProfileFragment = UserSettingsFragment.newInstance();
         mActiveFragment = mUserListFragment;
 
         mTextMessage = findViewById(R.id.message);
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
+        getSupportActionBar().setTitle(R.string.friends);
 
         mFragmentManager = getSupportFragmentManager();
 
@@ -138,24 +155,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .build();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.fragment_friend_list, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.add_friend:
-                Intent intent = AddFriendActivity.newIntent(this);
-                startActivity(intent);
-            default:
-                return super.onOptionsItemSelected(item);
-        }
     }
 
     @Override
@@ -197,5 +196,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+    }
+
+    @Override
+    public void googleSignOut() {
+        // Google sign out
+        mGoogleSignInClient.signOut().addOnCompleteListener(this,
+                new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                    }
+                });
     }
 }
