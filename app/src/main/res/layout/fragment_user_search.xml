@@ -4,55 +4,71 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_centerHorizontal="true"
-    android:gravity="center"
-    android:background="@color/listBackground">
+    android:gravity="center_horizontal">
 
-    <android.support.v7.widget.SearchView
-        android:id="@+id/edit_email"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:layoutDirection="ltr"
-        app:queryHint="Email"
-        app:iconifiedByDefault="false"/>
+        android:background="@color/colorPrimaryDark">
 
-    <Button
-        android:id="@+id/fragment_add_friend_get_user"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="40dp"
-        android:text="Submit"/>
-
-    <LinearLayout
-        android:id="@+id/layout_user_profile"
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:visibility="gone">
-
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/fragment_add_friend_image"
-            android:layout_width="200dp"
-            android:layout_height="200dp" />
-
-        <TextView
-            android:id="@+id/fragment_add_friend_name"
+        <android.support.v7.widget.SearchView
+            android:id="@+id/edit_email"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/fragment_add_friend_email"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <Button
-            android:id="@+id/fragment_add_friend_response"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:enabled="false"
-            android:text="Add Friend"/>
-    </LinearLayout>
+            android:layout_margin="8dp"
+            android:layoutDirection="rtl"
+            android:inputType="textEmailAddress"
+            app:queryHint="Email"
+            app:iconifiedByDefault="false"/>
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/fragment_user_search_blurry"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <LinearLayout
+            android:id="@+id/layout_user_profile"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:visibility="gone">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/fragment_user_search_image"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginTop="16dp"/>
+
+            <TextView
+                android:id="@+id/fragment_user_search_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorPrimaryLight"
+                android:textStyle="bold"
+                android:layout_margin="8dp"/>
+
+            <TextView
+                android:id="@+id/fragment_user_search_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorPrimaryLight"
+                android:layout_marginBottom="16dp"/>
+
+            <Button
+                android:id="@+id/fragment_user_search_response"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button_accent"
+                android:visibility="gone"
+                android:enabled="false"
+                android:text="Add"/>
+        </LinearLayout>
+    </FrameLayout>
 </LinearLayout>
