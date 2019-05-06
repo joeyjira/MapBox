@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.support.annotation.LayoutRes;
 import android.support.v4.app.Fragment;
 
-import com.joey.android.mapbox.fragment.SearchUserFragment;
+import com.joey.android.mapbox.fragment.UserSearchFragment;
 
 public class AddFriendActivity extends SingleFragmentActivity {
     private static final String TAG = "AddFriendActivity";
@@ -16,7 +16,7 @@ public class AddFriendActivity extends SingleFragmentActivity {
     }
     @Override
     protected Fragment createFragment() {
-        return SearchUserFragment.newInstance();
+        return UserSearchFragment.newInstance();
     }
 
     @Override
