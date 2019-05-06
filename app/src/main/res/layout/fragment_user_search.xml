@@ -12,7 +12,9 @@
         android:id="@+id/edit_email"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:queryHint="Enter Email"
+        android:layout_margin="8dp"
+        android:layoutDirection="ltr"
+        app:queryHint="Email"
         app:iconifiedByDefault="false"/>
 
     <Button
