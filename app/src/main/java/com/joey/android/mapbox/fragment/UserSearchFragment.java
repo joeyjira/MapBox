@@ -88,7 +88,7 @@ public class UserSearchFragment extends FirebaseFragment {
     private void searchUser(String email) {
         mReference.child(Reference.EMAILS)
                 .child(encodeEmail(email))
-                .addListenerForSingleValueEvent(getUserListener);
+                .addListenerForSingleValueEvent(checkUserListener);
 
         mUserProfileLayout.setVisibility(View.VISIBLE);
     }
@@ -127,7 +127,7 @@ public class UserSearchFragment extends FirebaseFragment {
         }
     };
 
-    ValueEventListener getUserListener = new ValueEventListener() {
+    ValueEventListener checkUserListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull final DataSnapshot userSnapshot) {
             // Check that user has signed up for app before
@@ -135,74 +135,94 @@ public class UserSearchFragment extends FirebaseFragment {
                 // Retrieve user from corresponding email
                 mReference.child(Reference.USERS)
                         .child(userSnapshot.getValue().toString())
-                        .addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                mUser = dataSnapshot.getValue(User.class);
-                                new DownloadProfileImageTask().execute(mUser);
-                                mUserNameText.setText(mUser.getName());
-                                mUserStatusText.setText(mUser.getEmail());
-                            }
+                        .addListenerForSingleValueEvent(getUserListener);
 
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                            }
-                        });
-
-                // Check if the email user searched refers own email
                 if (!userSnapshot.getValue().toString().equals(getUid())) {
                     mReference.child(Reference.FRIEND_REQUESTS)
-                            .child(userSnapshot.getValue().toString())
-                            .addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(@NonNull DataSnapshot friendRequestSnapshot) {
-                                    // Check if there is a pending request already
-                                    if (friendRequestSnapshot.exists()) {
-                                        // Update buttons if request is pending
-                                        mUserStatusText.setText("has not responded to your request yet");
-                                        mResponseButton.setText(R.string.pending_request);
-                                        mResponseButton.setEnabled(false);
-                                        return;
-                                    }
-
-                                    // Check if users are friends already
-                                    mReference.child(Reference.FRIENDS)
-                                            .child(userSnapshot.getValue().toString())
-                                            .child(getUid())
-                                            .addListenerForSingleValueEvent(new ValueEventListener() {
-                                                @Override
-                                                public void onDataChange(@NonNull DataSnapshot friendsSnapshot) {
-                                                    if (friendsSnapshot.exists()) {
-                                                        mUserStatusText.setText(R.string.existing_friend);
-                                                        mResponseButton.setEnabled(false);
-                                                    } else {
-                                                        mResponseButton.setText(R.string.add_friend);
-                                                        mResponseButton.setEnabled(true);
-                                                        mResponseButton.setVisibility(View.VISIBLE);
-                                                    }
-                                                }
-
-                                                @Override
-                                                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                                }
-                                            });
-                                }
-
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                }
-                            });
-                } else {
-                    mUserStatusText.setText(R.string.own_email);
-                    mResponseButton.setEnabled(false);
+                            .addListenerForSingleValueEvent(checkFriendRequestListener);
                 }
             } else {
                 // Make a toast, user cannot be found
                 mResponseButton.setEnabled(false);
                 mResponseButton.setVisibility(View.GONE);
+            }
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+        }
+    };
+
+    ValueEventListener getUserListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            mUser = dataSnapshot.getValue(User.class);
+            new DownloadProfileImageTask().execute(mUser);
+            mUserNameText.setText(mUser.getName());
+
+            // Check if the email user searched refers to own email
+            if (mUser.getUid().equals(getUid())) {
+                mUserStatusText.setText(R.string.own_email);
+                mUserStatusText.setVisibility(View.VISIBLE);
+                mResponseButton.setVisibility(View.GONE);
+            }
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+        }
+    };
+
+    ValueEventListener checkFriendRequestListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot friendRequestSnapshot) {
+            // Check if there is a pending request already
+            String friendUid = mUser.getUid();
+            if (friendRequestSnapshot.child(friendUid).exists()) {
+                // Update status to request is pending
+                mUserStatusText.setText("has not responded to your request yet");
+                mUserStatusText.setVisibility(View.VISIBLE);
+                mResponseButton.setEnabled(false);
+                mResponseButton.setVisibility(View.GONE);
+                return;
+            }
+
+            if (friendRequestSnapshot.child(getUid()).exists()) {
+                // Update status to waiting for response
+                mUserStatusText.setText(R.string.waiting_for_response);
+                mUserStatusText.setVisibility(View.VISIBLE);
+                mResponseButton.setVisibility(View.GONE);
+                return;
+            }
+
+            // Check if users are friends already
+            mReference.child(Reference.FRIENDS)
+                    .child(friendUid)
+                    .child(getUid())
+                    .addListenerForSingleValueEvent(isFriendListener);
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+        }
+    };
+
+    ValueEventListener isFriendListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot friendsSnapshot) {
+            if (friendsSnapshot.exists()) {
+                mUserStatusText.setText(R.string.existing_friend);
+                mUserStatusText.setVisibility(View.VISIBLE);
+                mResponseButton.setEnabled(false);
+                mResponseButton.setVisibility(View.GONE);
+            } else {
+                mUserStatusText.setVisibility(View.GONE);
+                mResponseButton.setText(R.string.add_friend);
+                mResponseButton.setEnabled(true);
+                mResponseButton.setVisibility(View.VISIBLE);
             }
         }
 
@@ -240,7 +260,7 @@ public class UserSearchFragment extends FirebaseFragment {
             mBlurryImage.setImageBitmap(blurImage);
         }
 
-        private static final float BLUR_RADIUS = 15f;
+        private static final float BLUR_RADIUS = 7.5f;
         private static final float BITMAP_SCALE = 0.4f;
 
         public Bitmap blur(Bitmap image) {
