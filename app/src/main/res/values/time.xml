@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals
+        name="minutesPassed">
+        <item
+            quantity="one"><font size="6">updated %d minute ago</font></item>
+
+        <item
+            quantity="other"><font size="6">updated %d minutes ago</font></item>
+    </plurals>
+
+    <plurals
+        name="hoursPassed">
+        <item
+            quantity="one"><font size="6">updated %d hour ago</font></item>
+
+        <item
+            quantity="other"><font size="6">updated %d hours ago</font></item>
+    </plurals>
+
+    <plurals
+        name="daysPassed">
+        <item
+            quantity="one"><font size="6">updated %d day ago</font></item>
+
+        <item
+            quantity="other"><font size="6">updated %d days ago</font></item>
+    </plurals>
+</resources>
