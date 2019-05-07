@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
@@ -439,7 +440,6 @@ public class UserListFragment extends FirebaseFragment {
 
                 mRequestLocationButton.setOnClickListener(requestLocationOnClickListener);
                 mSendLocationButton.setOnClickListener(sendLocationOnClickListener);
-//                mFriendImageView.setOnClickListener(friendImageOnClickListener);
 
                 if (mMapView != null) {
                     // Initialise the MapView
@@ -453,23 +453,19 @@ public class UserListFragment extends FirebaseFragment {
                 mUser = user;
 
                 LatLng latLng = mUser.getLatLng();
+
                 long currentTime = mUser.getLastUpdated();
                 long timeElapsed = new Date().getTime() - currentTime;
-                String timeTag = String.valueOf(TimeUnit.MILLISECONDS.toMinutes(timeElapsed));
+
+                setLastUpdated(timeElapsed);
 
                 mFriendNameTextView.setText(mUser.getName());
 
                 mPhotoFile = FriendList.get(getActivity()).getPhotoFile(mUser);
 
                 if (mProfileImageMap != null) {
-                    Log.i(TAG, "Setting Profile Image");
                     Bitmap image = mProfileImageMap.get(user);
                     mFriendImageView.setImageBitmap(image);
-                }
-
-                if (currentTime != 0L) {
-//                    mLastUpdatedTextView.setText();
-                    mRequestLocationButton.setText("REQUEST LOCATION\n" + "Updated " + timeTag + " minutes ago");
                 }
 
                 if (mLocation == null) {
@@ -479,18 +475,10 @@ public class UserListFragment extends FirebaseFragment {
                 }
 
                 if (user.isRequesting()) {
-//                mSendLocationButton.setBackgroundColor(getResources().getColor(R.color.colorBorder));
                     mSendLocationButton.setSelected(true);
                 } else {
-//                mSendLocationButton.setBackgroundColor(getResources().getColor(R.color.colorAccent));
                     mSendLocationButton.setSelected(false);
                 }
-
-//                if (mPhotoFile.exists()) {
-//                    mFriendImageView.setImageBitmap(BitmapFactory.decodeFile(mPhotoFile.getPath()));
-//                } else {
-//                    mFriendImageView.setImageDrawable(getResources().getDrawable(R.drawable.ic_profile_pic));
-//                }
 
                 if (latLng != null && mGoogleMap != null) {
                     setMapLocation(latLng);
@@ -499,6 +487,25 @@ public class UserListFragment extends FirebaseFragment {
                 GoogleMap map = mGoogleMap;
                 if (map != null) {
 
+                }
+            }
+
+            public void setLastUpdated(long timeElapsed) {
+                Resources res = getResources();
+                Long minutes = TimeUnit.MILLISECONDS.toMinutes(timeElapsed);
+                Long hours = TimeUnit.MILLISECONDS.toHours(timeElapsed);
+                Long days = TimeUnit.MILLISECONDS.toDays(timeElapsed);
+
+                String buttonText = res.getString(R.string.request_location);
+                if (minutes == 0) {
+                    mRequestLocationButton.setText(buttonText + res.getString(R.string.updated_moments_ago));
+                } else if (minutes < 61) {
+                    Log.i(TAG, "Minutes" + minutes.intValue());
+                    mRequestLocationButton.setText(buttonText + res.getQuantityString(R.plurals.minutesPassed, minutes.intValue(), minutes.intValue()));
+                } else if (hours < 25) {
+                    mRequestLocationButton.setText(buttonText + res.getQuantityString(R.plurals.hoursPassed, hours.intValue(), hours.intValue()));
+                } else {
+                    mRequestLocationButton.setText(buttonText + res.getQuantityString(R.plurals.daysPassed, days.intValue(), days.intValue()));
                 }
             }
 
