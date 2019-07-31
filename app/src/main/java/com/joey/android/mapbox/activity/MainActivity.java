@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -26,13 +27,13 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
 import com.joey.android.mapbox.R;
-import com.joey.android.mapbox.fragment.SearchUserFragment;
+import com.joey.android.mapbox.fragment.UserSearchFragment;
 import com.joey.android.mapbox.fragment.UserListFragment;
-import com.joey.android.mapbox.fragment.UserSettingsFragment;
+import com.joey.android.mapbox.fragment.UserProfileFragment;
 import com.joey.android.mapbox.fragment.UserRequestFragment;
 
 public class MainActivity extends AppCompatActivity
-        implements UserSettingsFragment.GoogleSignOut {
+        implements UserProfileFragment.GoogleSignOut {
     private static final String TAG = "MainActivity";
 
     private static final String EXTRA_AUTHENTICATED_USER = "authenticatedUser";
@@ -48,7 +49,7 @@ public class MainActivity extends AppCompatActivity
     private FragmentManager mFragmentManager;
     private Fragment mUserListFragment;
     private Fragment mUserRequestFragment;
-    private Fragment mSearchUserFragment;
+    private Fragment mUserSearchFragment;
     private Fragment mUserProfileFragment;
     private Fragment mActiveFragment;
 
@@ -63,29 +64,36 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            ActionBar actionBar = getSupportActionBar();
+
             switch (item.getItemId()) {
                 case R.id.navigation_friend_box:
                     mFragmentManager.beginTransaction()
                             .hide(mActiveFragment)
                             .show(mUserListFragment)
                             .commit();
-                    getSupportActionBar().setTitle(R.string.friends);
+                    actionBar.setTitle(R.string.friends);
                     mActiveFragment = mUserListFragment;
                     return true;
                 case R.id.navigation_search:
+                    Fragment userSearchFragment = UserSearchFragment.newInstance();
                     mFragmentManager.beginTransaction()
+                            .remove(mUserSearchFragment)
+                            .add(R.id.main_container, userSearchFragment)
                             .hide(mActiveFragment)
-                            .show(mSearchUserFragment)
+                            .show(userSearchFragment)
                             .commit();
-                    getSupportActionBar().setTitle(R.string.search);
-                    mActiveFragment = mSearchUserFragment;
+                    actionBar.setTitle(R.string.search);
+                    mUserSearchFragment = userSearchFragment;
+                    mActiveFragment = mUserSearchFragment;
                     return true;
                 case R.id.navigation_friend_request:
                     mFragmentManager.beginTransaction()
                             .hide(mActiveFragment)
                             .show(mUserRequestFragment)
                             .commit();
-                    getSupportActionBar().setTitle(R.string.requests);
+                    actionBar.setTitle(R.string.requests);
+
                     mActiveFragment = mUserRequestFragment;
                     return true;
                 case R.id.navigation_settings:
@@ -93,7 +101,7 @@ public class MainActivity extends AppCompatActivity
                             .hide(mActiveFragment)
                             .show(mUserProfileFragment)
                             .commit();
-                    getSupportActionBar().setTitle(R.string.settings);
+                    actionBar.setTitle(R.string.settings);
                     mActiveFragment = mUserProfileFragment;
                     return true;
             }
@@ -104,7 +112,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTheme(R.style.AppTheme);
+        setTheme(R.style.MapBoxTheme);
         setContentView(R.layout.activity_main);
 
         mUser = getIntent().getParcelableExtra(EXTRA_AUTHENTICATED_USER);
@@ -119,8 +127,8 @@ public class MainActivity extends AppCompatActivity
         // Create required fragments
         mUserListFragment = UserListFragment.newInstance();
         mUserRequestFragment = UserRequestFragment.newInstance();
-        mSearchUserFragment = SearchUserFragment.newInstance();
-        mUserProfileFragment = UserSettingsFragment.newInstance();
+        mUserSearchFragment = UserSearchFragment.newInstance();
+        mUserProfileFragment = UserProfileFragment.newInstance();
         mActiveFragment = mUserListFragment;
 
         mTextMessage = findViewById(R.id.message);
@@ -133,11 +141,11 @@ public class MainActivity extends AppCompatActivity
 
         mFragmentManager.beginTransaction()
                 .add(R.id.main_container, mUserListFragment)
+                .add(R.id.main_container, mUserSearchFragment)
                 .add(R.id.main_container, mUserRequestFragment)
-                .add(R.id.main_container, mSearchUserFragment)
                 .add(R.id.main_container, mUserProfileFragment)
+                .hide(mUserSearchFragment)
                 .hide(mUserRequestFragment)
-                .hide(mSearchUserFragment)
                 .hide(mUserProfileFragment)
                 .commit();
 
