@@ -21,7 +21,9 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -42,12 +44,14 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.joey.android.mapbox.activity.FriendProfileActivity;
 import com.joey.android.mapbox.firebase.MapBoxFBSchema.FriendsChild;
 import com.joey.android.mapbox.firebase.MapBoxFBSchema.Reference;
 import com.joey.android.mapbox.model.User;
 import com.joey.android.mapbox.model.FriendList;
 import com.joey.android.mapbox.R;
 import com.joey.android.mapbox.model.UserInfo;
+import com.joey.android.mapbox.util.ProfileImageUtility;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -73,8 +77,7 @@ public class UserListFragment extends FirebaseFragment {
     private static final String[] STORAGE_PERMISSIONS = new String[] {
             Manifest.permission.READ_EXTERNAL_STORAGE
     };
-    private static final int REQUEST_LOCATION_PERMISSIONS = 0;
-    private static final int REQUEST_STORAGE_PERMISSION = 1;
+
     private static final int REQUEST_IMAGE_CODE = 2;
 
     private RecyclerView mFriendListRecyclerView;
@@ -102,6 +105,17 @@ public class UserListFragment extends FirebaseFragment {
 
         mFriendListRecyclerView = view.findViewById(R.id.recycler_view_map_box);
         mFriendListRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mFriendListRecyclerView.getViewTreeObserver()
+                .addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        // Layout is complete, remove window background
+                        getActivity().setTheme(R.style.MapBoxTheme);
+
+                        mFriendListRecyclerView.getViewTreeObserver()
+                                .removeOnGlobalLayoutListener(this);
+                    }
+                });
 
         mEmptyListTextView = view.findViewById(R.id.fragment_recycler_view_empty_list);
         mEmptyListTextView.setText("Try adding someone!");
@@ -157,8 +171,6 @@ public class UserListFragment extends FirebaseFragment {
     public void onStop() {
         super.onStop();
 
-//        mFriendsReference.child(getUid()).removeEventListener(friendListListener);
-        mAdapter.clearListener();
         Log.i(TAG, "Fragment.onStop() called");
     }
 
@@ -167,6 +179,13 @@ public class UserListFragment extends FirebaseFragment {
         super.onDestroy();
 
         Log.i(TAG, "Fragment.onDestroy() called");
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        mAdapter.clearListener();
     }
 
     @Override
@@ -216,6 +235,8 @@ public class UserListFragment extends FirebaseFragment {
         if (mAdapter == null) {
             mAdapter = new FriendListAdapter();
             mFriendListRecyclerView.setAdapter(mAdapter);
+        } else {
+            mAdapter.attachListener();
         }
     }
 
@@ -239,8 +260,6 @@ public class UserListFragment extends FirebaseFragment {
             ChildEventListener childEventListener = new ChildEventListener() {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                    Log.i(TAG, "onChildAdded:" + dataSnapshot);
-
                     final UserInfo userInfo = dataSnapshot.getValue(UserInfo.class);
                     userInfo.setUid(dataSnapshot.getKey());
 
@@ -252,7 +271,7 @@ public class UserListFragment extends FirebaseFragment {
                                     .getValue(User.class);
 
                             // Download Profile Image from Google
-                            new DownloadProfileImageTask().execute(new User[] { user });
+                            new DownloadProfileImageTask().execute(user);
 
                             user.additionalInfo(userInfo);
 
@@ -272,8 +291,6 @@ public class UserListFragment extends FirebaseFragment {
 
                 @Override
                 public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                    Log.i(TAG, "onChildChanged:" + dataSnapshot);
-
                     String uid = dataSnapshot.getKey();
                     UserInfo userInfo = dataSnapshot.getValue(UserInfo.class);
                     userInfo.setUid(uid);
@@ -293,8 +310,6 @@ public class UserListFragment extends FirebaseFragment {
 
                 @Override
                 public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-                    Log.i(TAG, "onChildRemoved:" + dataSnapshot);
-
                     String uid = dataSnapshot.getKey();
                     int userIndex = mUsersId.indexOf(uid);
                     if (userIndex > -1) {
@@ -349,6 +364,10 @@ public class UserListFragment extends FirebaseFragment {
             return mUsers.size();
         }
 
+        public void attachListener() {
+            mFriendsReference.child(getUid()).addChildEventListener(mChildEventListener);
+        }
+
         public void clearListener() {
             if (mChildEventListener != null) {
                 mFriendsReference.child(getUid()).removeEventListener(mChildEventListener);
@@ -360,16 +379,14 @@ public class UserListFragment extends FirebaseFragment {
 
             @Override
             protected Bitmap doInBackground(User... users) {
-                Log.i(TAG, "Async Task called to download image");
                 mUser = users[0];
 
                 String photoUri = mUser.getPhotoUri();
                 Bitmap photoBitmap = null;
 
                 try {
-                    byte[] imageBytes = getUrlBytes(photoUri);
+                    byte[] imageBytes = ProfileImageUtility.getUrlBytes(photoUri);
                     photoBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-                    Log.i(TAG, "PHOTO" + photoUri);
                 } catch (IOException ioe) {
                     Log.e(TAG, "Failed to fetch bitmap from url");
                 }
@@ -379,47 +396,19 @@ public class UserListFragment extends FirebaseFragment {
 
             @Override
             protected void onPostExecute(Bitmap bitmap) {
-                Log.i(TAG, "User:" + mUser + ", bitmap:" + bitmap);
                 mProfileImageMap.put(mUser, bitmap);
-            }
-
-            private byte[] getUrlBytes(String urlSpec) throws IOException {
-                URL url = new URL(urlSpec);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-                try {
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    InputStream in = connection.getInputStream();
-
-                    if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                        throw new IOException(connection.getResponseMessage() +
-                                ": with " +
-                                urlSpec);
-                    }
-
-                    int bytesRead;
-                    byte[] buffer = new byte[1024];
-
-                    while ((bytesRead = in.read(buffer)) > 0) {
-                        out.write(buffer, 0, bytesRead);
-                    }
-
-                    out.close();
-                    return out.toByteArray();
-                } finally {
-                    connection.disconnect();
-                }
+                getActivity().setTheme(R.style.MapBoxTheme);
             }
         }
 
         private class FriendHolder extends RecyclerView.ViewHolder
                 implements OnMapReadyCallback {
             private User mUser;
-            private File mPhotoFile;
+            private Bitmap mProfileImage;
             private GoogleMap mGoogleMap;
 
+            private LinearLayout mFriendTab;
             private TextView mFriendNameTextView;
-            private TextView mLastUpdatedTextView;
             private Button mRequestLocationButton;
             private Button mSendLocationButton;
             private MapView mMapView;
@@ -428,8 +417,8 @@ public class UserListFragment extends FirebaseFragment {
             public FriendHolder(View view) {
                 super(view);
 
+                mFriendTab = view.findViewById(R.id.viewholder_friend_tab);
                 mFriendNameTextView = view.findViewById(R.id.viewholder_friend_list_name);
-                mLastUpdatedTextView = view.findViewById(R.id.viewholder_friend_list_time_updated);
                 mRequestLocationButton = view.findViewById(R.id.viewholder_friend_list_get_location);
                 mSendLocationButton = view.findViewById(R.id.viewholder_friend_list_send_location);
                 mFriendImageView = view.findViewById(R.id.viewholder_friend_list_image);
@@ -451,21 +440,17 @@ public class UserListFragment extends FirebaseFragment {
 
             public void bind(User user) {
                 mUser = user;
-
                 LatLng latLng = mUser.getLatLng();
-
-                long currentTime = mUser.getLastUpdated();
-                long timeElapsed = new Date().getTime() - currentTime;
+                long lastUpdated = mUser.getLastUpdated();
+                long timeElapsed = new Date().getTime() - lastUpdated;
 
                 setLastUpdated(timeElapsed);
 
                 mFriendNameTextView.setText(mUser.getName());
 
-                mPhotoFile = FriendList.get(getActivity()).getPhotoFile(mUser);
-
                 if (mProfileImageMap != null) {
-                    Bitmap image = mProfileImageMap.get(user);
-                    mFriendImageView.setImageBitmap(image);
+                    mProfileImage = mProfileImageMap.get(user);
+                    mFriendImageView.setImageBitmap(mProfileImage);
                 }
 
                 if (mLocation == null) {
@@ -488,6 +473,8 @@ public class UserListFragment extends FirebaseFragment {
                 if (map != null) {
 
                 }
+
+                mFriendTab.setOnClickListener(friendProfileListener);
             }
 
             public void setLastUpdated(long timeElapsed) {
@@ -500,7 +487,6 @@ public class UserListFragment extends FirebaseFragment {
                 if (minutes == 0) {
                     mRequestLocationButton.setText(buttonText + res.getString(R.string.updated_moments_ago));
                 } else if (minutes < 61) {
-                    Log.i(TAG, "Minutes" + minutes.intValue());
                     mRequestLocationButton.setText(buttonText + res.getQuantityString(R.plurals.minutesPassed, minutes.intValue(), minutes.intValue()));
                 } else if (hours < 25) {
                     mRequestLocationButton.setText(buttonText + res.getQuantityString(R.plurals.hoursPassed, hours.intValue(), hours.intValue()));
@@ -511,10 +497,9 @@ public class UserListFragment extends FirebaseFragment {
 
             @Override
             public void onMapReady(GoogleMap googleMap) {
-                mLastUpdatedTextView.bringToFront();
-                LatLng userLatLng = mUser.getLatLng();
-                MapsInitializer.initialize(UserListFragment.this.getActivity());
                 mGoogleMap = googleMap;
+                LatLng userLatLng = mUser.getLatLng();
+                MapsInitializer.initialize(getActivity());
                 setMapLocation(userLatLng);
                 mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
             }
@@ -523,10 +508,6 @@ public class UserListFragment extends FirebaseFragment {
                 if (userLatLng != null) {
                     mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 13f));
                     mGoogleMap.addMarker(new MarkerOptions().position(userLatLng));
-                } else {
-//                mGoogleMap.moveCamera(CameraUpdateFactory
-//                        .newLatLngZoom(new LatLng(mLocation
-//                                .getLatitude(), mLocation.getLongitude()), 13f));
                 }
             }
 
@@ -543,18 +524,14 @@ public class UserListFragment extends FirebaseFragment {
             View.OnTouchListener sendLocationListener = new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
-                    if (event.getAction() == MotionEvent.ACTION_DOWN)
-                    {
+                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
                         float x = (float) 1.25;
                         float y = (float) 1.25;
 
                         mSendLocationButton.setScaleX(x);
                         mSendLocationButton.setScaleY(y);
-                    }
-
-                    else if(event.getAction() == MotionEvent.ACTION_UP ||
-                            event.getAction() == MotionEvent.ACTION_CANCEL)
-                    {
+                    } else if (event.getAction() == MotionEvent.ACTION_UP
+                            || event.getAction() == MotionEvent.ACTION_CANCEL) {
                         float x = 1;
                         float y = 1;
 
@@ -573,7 +550,7 @@ public class UserListFragment extends FirebaseFragment {
                     DatabaseReference userRef = mFriendsReference.child(getUid())
                             .child(mUser.getUid());
 
-                    // Inverted timestamp so firebase returns most recent first
+                    // Inverted timestamp so Firebase returns most recent first
                     long currentTime = -1 * (new Date().getTime());
 
                     if (mLocation != null) {
@@ -592,50 +569,13 @@ public class UserListFragment extends FirebaseFragment {
                 }
             };
 
-//            private View.OnClickListener friendImageOnClickListener = new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    if (hasReadExternalStoragePermission()) {
-//                        Uri uri = FileProvider.getUriForFile(getActivity(),
-//                                "com.joey.android.mapbox.fileprovider",
-//                                mPhotoFile);
-//                        Log.i(TAG, "" + uri);
-//                        // Create an Intent with action as ACTION_PICk
-//                        Intent intent = new Intent(Intent.ACTION_PICK);
-//                        // Sets the type as image/*. This ensures only components of type image are selected
-//                        intent.setType("image/*");
-//                        // Put extra for gallery to return a cropped image
-//                        intent.putExtra("crop", true);
-//                        intent.putExtra("outputX", 200);
-//                        intent.putExtra("outputY", 200);
-//                        intent.putExtra("aspectX", 1);
-//                        intent.putExtra("aspectY", 1);
-//                        intent.putExtra("scale", true);
-//                        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-//                        intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
-//                        // We pass an extra array with the accepted mime types.
-//                        // This will ensure only components with these MIME types as targets.
-//                        String[] mimeTypes = {"image/jpeg", "image/png"};
-//                        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
-//
-//                        List<ResolveInfo> galleryActivities = getActivity()
-//                                .getPackageManager().queryIntentActivities(intent,
-//                                        PackageManager.MATCH_DEFAULT_ONLY);
-//
-//                        for (ResolveInfo activity : galleryActivities) {
-//                            getActivity().grantUriPermission(activity.activityInfo.packageName,
-//                                    uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-//                        }
-//
-//                        // Launching the Intent with chooser
-//                        Intent chooser = Intent.createChooser(intent, "Choose Image");
-//                        startActivityForResult(chooser, REQUEST_IMAGE_CODE);
-//                    } else {
-//                        requestPermissions(STORAGE_PERMISSIONS,
-//                                REQUEST_STORAGE_PERMISSION) ;
-//                    }
-//                }
-//            };
+            View.OnClickListener friendProfileListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = FriendProfileActivity.newIntent(getActivity(), mUser, mProfileImage);
+                    startActivity(intent);
+                }
+            };
         }
     }
 
