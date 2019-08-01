@@ -28,6 +28,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.joey.android.mapbox.R;
 import com.joey.android.mapbox.firebase.MapBoxFBSchema.Reference;
 import com.joey.android.mapbox.model.User;
+import com.joey.android.mapbox.util.ProfileImageUtility;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -244,7 +245,7 @@ public class UserSearchFragment extends FirebaseFragment {
             Bitmap photoBitmap = null;
 
             try {
-                byte[] imageBytes = getUrlBytes(photoUri);
+                byte[] imageBytes = ProfileImageUtility.getUrlBytes(photoUri);
                 photoBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
             } catch (IOException ioe) {
                 Log.e(TAG, "Failed to fetch bitmap from url");
@@ -256,60 +257,8 @@ public class UserSearchFragment extends FirebaseFragment {
         @Override
         protected void onPostExecute(Bitmap bitmap) {
             mProfileImage.setImageBitmap(bitmap);
-            Bitmap blurImage = blur(bitmap);
+            Bitmap blurImage = ProfileImageUtility.blur(bitmap, getActivity());
             mBlurryImage.setImageBitmap(blurImage);
-        }
-
-        private static final float BLUR_RADIUS = 7.5f;
-        private static final float BITMAP_SCALE = 0.4f;
-
-        public Bitmap blur(Bitmap image) {
-            if (null == image) return null;
-
-            int width = Math.round(image.getWidth() * BITMAP_SCALE);
-            int height = Math.round(image.getHeight() * BITMAP_SCALE);
-
-            Bitmap inputBitmap = Bitmap.createScaledBitmap(image, width, height, false);
-            Bitmap outputBitmap = Bitmap.createBitmap(inputBitmap);
-
-            RenderScript rs = RenderScript.create(getActivity());
-            ScriptIntrinsicBlur theIntrinsic = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
-            Allocation tmpIn = Allocation.createFromBitmap(rs, inputBitmap);
-            Allocation tmpOut = Allocation.createFromBitmap(rs, outputBitmap);
-            theIntrinsic.setRadius(BLUR_RADIUS);
-            theIntrinsic.setInput(tmpIn);
-            theIntrinsic.forEach(tmpOut);
-            tmpOut.copyTo(outputBitmap);
-
-            return outputBitmap;
-        }
-
-        private byte[] getUrlBytes(String urlSpec) throws IOException {
-            URL url = new URL(urlSpec);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-            try {
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                InputStream in = connection.getInputStream();
-
-                if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                    throw new IOException(connection.getResponseMessage() +
-                            ": with " +
-                            urlSpec);
-                }
-
-                int bytesRead;
-                byte[] buffer = new byte[1024];
-
-                while ((bytesRead = in.read(buffer)) > 0) {
-                    out.write(buffer, 0, bytesRead);
-                }
-
-                out.close();
-                return out.toByteArray();
-            } finally {
-                connection.disconnect();
-            }
         }
     }
 }
