@@ -7,15 +7,19 @@
     <string name="settings">Settings</string>
 
     // FriendList String
-    <string name="request_location">Request Location</string>
+    <string name="request_location">Request Location \n</string>
+    <string name="updated_moments_ago">Updated moments ago</string>
     <string name="send_location">Send Location</string>
     <string name="title_activity_maps">Map</string>
 
-    // AddUserFragment
+    // UserSearchFragment
+    <string name="own_email">You can\'t add yourself as a friend</string>
     <string name="pending_request">Pending...</string>
-    <string name="existing_friend">Friended</string>
-    <string name="add_friend">Send Request</string>
+    <string name="waiting_for_response">is waiting for your response</string>
+    <string name="existing_friend">is already your friend.</string>
+    <string name="add_friend">Add</string>
     <string name="sent_request">Sent!</string>
+    <string name="user_not_found">User not found.</string>
 
     // UserRequestFragment
     <string name="accept_button">Accept</string>
