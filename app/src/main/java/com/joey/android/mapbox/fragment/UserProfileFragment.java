@@ -10,20 +10,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.joey.android.mapbox.R;
 import com.joey.android.mapbox.activity.SignInActivity;
 
-public class UserSettingsFragment extends FirebaseFragment {
-    private static final String TAG = "UserSettingsFragment";
+public class UserProfileFragment extends FirebaseFragment {
+    private static final String TAG = "UserProfileFragment";
 
     private GoogleSignOut mCallback;
 
     private Button mSignOutButton;
 
-    public static UserSettingsFragment newInstance() {
-        return new UserSettingsFragment();
+    public static UserProfileFragment newInstance() {
+        return new UserProfileFragment();
     }
 
     View.OnClickListener signOutListener = new View.OnClickListener() {
