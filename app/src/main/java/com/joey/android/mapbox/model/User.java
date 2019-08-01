@@ -1,12 +1,12 @@
 package com.joey.android.mapbox.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 
-import java.util.Date;
-
-public class User {
+public class User implements Parcelable {
     private static final String TAG = "User";
 
     private String mUid;
@@ -14,10 +14,53 @@ public class User {
     private String mPhotoUri;
     private String mEmail;
     private boolean mRequesting;
-    private LatLng mLatLng;
+    private double mLatitude;
+    private double mLongitude;
     private long mLastUpdated;
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Parcelable.Creator<User> CREATOR
+            = new Parcelable.Creator<User>() {
+        @Override
+        public User createFromParcel(Parcel source) {
+            return new User(source);
+        }
+
+        @Override
+        public User[] newArray(int size) {
+            return new User[size];
+        }
+    };
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mUid);
+        dest.writeString(mName);
+        dest.writeString(mPhotoUri);
+        dest.writeString(mEmail);
+        dest.writeByte((byte)(mRequesting ? 1 : 0));
+        dest.writeDouble(mLatitude);
+        dest.writeDouble(mLongitude);
+        dest.writeLong(mLastUpdated);
+    }
+
+    // Default constructor for Firebase
     public User() {
+    }
+
+    protected User(Parcel in) {
+        mUid = in.readString();
+        mName = in.readString();
+        mPhotoUri = in.readString();
+        mEmail = in.readString();
+        mRequesting = in.readByte() != 0;
+        mLatitude = in.readDouble();
+        mLongitude = in.readDouble();
+        mLastUpdated = in.readLong();
     }
 
     public User(String uid, String name) {
@@ -31,7 +74,7 @@ public class User {
         }
 
         if (info.getLatitude() != null && info.getLongitude() != null) {
-            setLatLng(new LatLng(info.getLatitude(), info.getLongitude()));
+            setLatLng(info.getLatitude(), info.getLongitude());
         }
 
         if (info.getLastUpdated() != null) {
@@ -90,11 +133,12 @@ public class User {
     }
 
     public LatLng getLatLng() {
-        return mLatLng;
+        return new LatLng(mLatitude, mLongitude);
     }
 
-    public void setLatLng(LatLng latLng) {
-        mLatLng = latLng;
+    public void setLatLng(double lat, double lng) {
+        mLatitude = lat;
+        mLongitude =lng;
     }
 
     public long getLastUpdated() {
